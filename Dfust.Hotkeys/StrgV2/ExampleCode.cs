@@ -28,7 +28,7 @@ using static Dfust.Hotkeys.Enums;
 
 namespace Dfust.Hotkeys.TestGui {
 
-    internal class ExampleCode {
+    internal static class ExampleCode {
 
         public static void Example() {
             //create a new hotkey collection for the application.

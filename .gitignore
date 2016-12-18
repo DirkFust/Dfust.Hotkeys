@@ -243,3 +243,6 @@ ModelManifest.xml
 
 #Tabs Studio Settings
 *.tss
+
+#License Headers
+*.licenseheader
