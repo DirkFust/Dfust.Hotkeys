@@ -33,7 +33,7 @@ namespace Dfust.Hotkeys {
     internal class HotkeyCollectionInternal : IHotkeyCollection {
 
         //Hotkeys with a fixed sequence of key strokes. For example "ctrl+v", or "ctrl+alt+g, ctrl+alt+p"
-        private readonly NestedDictionary<Keys, Dictionary<string, HotkeyAction>> m_fixedHotkeys = new NestedDictionary<Keys, Dictionary<string, HotkeyAction>>();
+        private readonly NestedDictionary<Keys, Dictionary<string, HotkeyAction>> m_registeredHotkeys = new NestedDictionary<Keys, Dictionary<string, HotkeyAction>>();
 
         private readonly Keys[] m_modifierKeys = { Keys.Control, Keys.Alt, Keys.Shift, Keys.LWin };
         private LimitedQueue<KeysState> m_keyBuffer;
@@ -44,7 +44,7 @@ namespace Dfust.Hotkeys {
         /// </summary>
         /// <returns></returns>
         public IEnumerable<Keys[]> GetHotkeys() {
-            return m_fixedHotkeys.GetAllPaths();
+            return m_registeredHotkeys.GetAllPaths();
         }
 
         /// <summary>
@@ -66,17 +66,19 @@ namespace Dfust.Hotkeys {
 
             for (int i = 0; i < hotkeys.Count(); i++) {
                 var hotkey = hotkeys[i];
-                sb.Append("- ");
 
-                sb.Append(hotkey.Name);
+                foreach (var xxx in m_registeredHotkeys.TryGetValue(hotkey.Chord).Item1) {
+                    sb.Append("- ");
+                    sb.Append(hotkey.Name);
 
-                var desc = m_fixedHotkeys.TryGetValue(hotkey.Chord).Item1[hotkey.Name].Description;
+                    var desc = xxx.Value.Description;
 
-                if (!string.IsNullOrWhiteSpace(desc)) {
-                    sb.Append($" ({desc})");
-                }
-                if (i < hotkeys.Count() - 1) {
-                    sb.Append(Environment.NewLine);
+                    if (!string.IsNullOrWhiteSpace(desc)) {
+                        sb.Append($" ({desc})");
+                    }
+                    if (i < hotkeys.Count() - 1) {
+                        sb.Append(Environment.NewLine);
+                    }
                 }
             }
 
@@ -109,15 +111,65 @@ namespace Dfust.Hotkeys {
         public void RegisterHotkey(IEnumerable<Keys> chord, Action<HotKeyEventArgs> action, string actionDescription = null, bool handled = true) {
             var keys = chord.ToArray();
 
-            m_fixedHotkeys.Add(keys, new Dictionary<string, HotkeyAction>());
+            if (!m_registeredHotkeys.ContainsPath(keys)) {
+                m_registeredHotkeys.Add(keys, new Dictionary<string, HotkeyAction>());
+            }
 
             UpdateKeyBuffer();
 
-            var funcs = m_fixedHotkeys.TryGetValue(keys);
+            var funcs = m_registeredHotkeys.TryGetValue(keys);
 
             var hotkeyAction = new HotkeyAction(action, keys, handled) { Description = actionDescription };
 
-            funcs.Item1.Add(hotkeyAction.ChordName, hotkeyAction);
+            var registeredActions = funcs.Item1;
+
+            var key = hotkeyAction.ChordName + actionDescription;
+
+            if (!registeredActions.ContainsKey(key)) {
+                registeredActions.Add(key, hotkeyAction);
+            } else {
+                throw new ArgumentException($"Two actions on the same chord have to differ in the description. chord: {hotkeyAction.ChordName}, description: '{ actionDescription }'.");
+            }
+        }
+
+        /// <summary>
+        /// Unregisters a chord.
+        /// </summary>
+        /// <param name="chord">The chord.</param>
+        /// <param name="actionDescription">
+        /// A description of the action (optional). If left empty, all actions of this hotkey will be removed.
+        /// </param>
+        public void UnregisterHotkey(IEnumerable<Keys> chord, string actionDescription = null) {
+            var keys = chord.ToArray();
+
+            var hotkeyActions = m_registeredHotkeys.TryGetValue(keys);
+            if (hotkeyActions != null && hotkeyActions.Item1 != null) {
+                var key = Keys2String.ChordToString(chord) + actionDescription;
+                if (hotkeyActions.Item1.ContainsKey(key)) {
+                    if (hotkeyActions.Item1.Count == 1) {
+                        m_registeredHotkeys.Remove(keys);
+                    } else {
+                        hotkeyActions.Item1.Remove(key);
+                    }
+                } else {
+                    if (actionDescription == null) {
+                        m_registeredHotkeys.Remove(keys);
+                    } else {
+                        throw new ArgumentException($"None of the actions for the hotkey '{Keys2String.ChordToString(keys)}' does have the description '{actionDescription}'.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Unregisters a hotkey.
+        /// </summary>
+        /// <param name="key">The hotkey.</param>
+        /// <param name="actionDescription">
+        /// A description of the action (optional). If left empty, all actions of this hotkey will be removed.
+        /// </param>
+        public void UnregisterHotkey(Keys key, string actionDescription = null) {
+            UnregisterHotkey(new[] { key }, actionDescription);
         }
 
         /// <summary>
@@ -152,7 +204,7 @@ namespace Dfust.Hotkeys {
                         //Start with the last key and one by one take more keys
                         var path = currentPath.Skip(i).ToList();
 
-                        var actions = m_fixedHotkeys.TryGetValue(path).Item1;
+                        var actions = m_registeredHotkeys.TryGetValue(path).Item1;
                         if (actions != null) {
                             UpdateLastExecutedHotkey(path);
 
@@ -197,9 +249,8 @@ namespace Dfust.Hotkeys {
             return state;
         }
 
-#pragma warning disable CC0013 // Use ternary operator
-
         private KeysState GetCurrentKeysState() {
+#pragma warning disable CC0013 // Use ternary operator
             //Get the last latest entry of the buffer
             var lastState = (m_keyBuffer.Last(1));
             if (lastState == null) {
@@ -209,9 +260,8 @@ namespace Dfust.Hotkeys {
                 //If we already added a "real" key (not a modifier), then we need a new state. If we only have added modifiers (or nothing) the lastState is fine
                 return lastState[0].KeyAdded ? CreateAndEnqueueKeysState(lastState.First()) : lastState.First();
             }
-        }
-
 #pragma warning restore CC0013 // Use ternary operator
+        }
 
         private List<Keys> GetCurrentPath() {
             return m_keyBuffer.Select((s) => s.Key).ToList();
@@ -222,19 +272,19 @@ namespace Dfust.Hotkeys {
         }
 
         private void UpdateKeyBuffer() {
-            var bufferSize = m_fixedHotkeys.LongestPathCount;
+            var bufferSize = m_registeredHotkeys.LongestPathCount;
             m_keyBuffer = new LimitedQueue<KeysState>(bufferSize);
         }
 
         private void UpdateLastExecutedHotkey(List<Keys> path) {
-            var chordName = Keys2String.ChordToString(path);
 #pragma warning disable CC0014 // Use ternary operator
+            var chordName = Keys2String.ChordToString(path);
             if (m_lastExecutedChord?.Item1 == chordName) {
-#pragma warning restore CC0014 // Use ternary operator
                 m_lastExecutedChord = new Tuple<string, int>(chordName, m_lastExecutedChord.Item2 + 1);
             } else {
                 m_lastExecutedChord = new Tuple<string, int>(chordName, 1);
             }
+#pragma warning restore CC0014 // Use ternary operator
         }
 
         private class HotkeyAction {

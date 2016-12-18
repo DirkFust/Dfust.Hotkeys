@@ -171,6 +171,14 @@ namespace Dfust.Hotkeys {
             GC.SuppressFinalize(this);
         }
 
+        public void UnregisterHotkey(Keys key, string actionDescription = null) {
+            ((IHotkeyCollection)m_hotkeys).UnregisterHotkey(key, actionDescription);
+        }
+
+        public void UnregisterHotkey(IEnumerable<Keys> chord, string actionDescription = null) {
+            ((IHotkeyCollection)m_hotkeys).UnregisterHotkey(chord, actionDescription);
+        }
+
         protected virtual void Dispose(bool disposing) {
             if (!disposedValue) {
                 if (disposing) {

@@ -34,7 +34,7 @@ namespace Dfust.Hotkeys.Tests {
 
     [TestFixture, ExcludeFromCodeCoverage]
     public class HotkeyCollectionInternalTests {
-        private const string loremIpsum = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Duis autem vel eum iriure dolor in endrerit in vulputate velit esse molestie consequat, vel illum dolore eu";
+        private const string loremIpsum = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren";
         private static int m_counter;
 
         [Test]
@@ -81,6 +81,23 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
+        public void HotkeyCollectionShouldNotThrowWhenTryingToUnregisterNotExistingHotkey() {
+            //--- Assemble
+            var hc = new HotkeyCollectionInternal();
+
+            const Keys key = Keys.A;
+
+            //--- Act /Assert
+
+            //Unregister not existing hotkey with default value for actionDescription
+            Assert.DoesNotThrow(() => hc.UnregisterHotkey(key));
+            //Unregister not existing hotkey with explicitly provided default value for actionDescription
+            Assert.DoesNotThrow(() => hc.UnregisterHotkey(key, actionDescription: null));
+            //Unregister not existing hotkey with explicitly provided non-default value for actionDescription
+            Assert.DoesNotThrow(() => hc.UnregisterHotkey(key, actionDescription: "aaaaaaa"));
+        }
+
+        [Test]
         public void HotkeyCollectionShouldRegisterSimpleHotkeyAndFireWhenDetected() {
             //--- Assemble
             var hc = new HotkeyCollectionInternal();
@@ -103,6 +120,135 @@ namespace Dfust.Hotkeys.Tests {
                 hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
                 Assert.That(m_counter, Is.EqualTo(1));
             }
+        }
+
+        [Test]
+        public void HotkeyCollectionShouldThrowWhenTryingToUnregisterHotkeysWithNonExistingActionDescription() {
+            //--- Assemble
+            var counter = 0;
+            var counter1 = 0;
+            var counter2 = 0;
+
+            var hc = new HotkeyCollectionInternal();
+            const Keys key = Keys.A;
+
+            hc.RegisterHotkey(key, e => { counter++; counter1++; }, "action1");
+            hc.RegisterHotkey(key, e => { counter++; counter2++; }, "action2");
+
+            //trigger hotkey
+            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(counter1, Is.EqualTo(1));
+            Assert.That(counter2, Is.EqualTo(1));
+            Assert.IsTrue(hc.GetHotkeys().First().First() == key);
+
+            //--- Act / Assert
+
+            //we try to unregister with a description that does not exist for this hotkey
+            Assert.Throws<ArgumentException>(() => hc.UnregisterHotkey(key, "xxxxxxx"));
+        }
+
+        [Test]
+        public void HotkeyCollectionShouldUnregisterHotkey() {
+            //--- Assemble
+            var hc = new HotkeyCollectionInternal();
+            const Keys key = Keys.A;
+
+            hc.RegisterHotkey(key, TestMethod);
+
+            //trigger hotkey
+            Assert.That(m_counter, Is.EqualTo(0));
+            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            Assert.That(m_counter, Is.EqualTo(1));
+            Assert.IsTrue(hc.GetHotkeys().First().First() == key);
+
+            //--- Act
+
+            hc.UnregisterHotkey(key);
+
+            //---Assert
+
+            //same key that triggered the hotkey does not trigger it again
+            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            Assert.That(m_counter, Is.EqualTo(1));
+            Assert.IsFalse(hc.GetHotkeys().Any());
+        }
+
+        [Test]
+        public void HotkeyCollectionShouldUnregisterHotkeyAndActionSpecifiedByDescription() {
+            //--- Assemble
+            var counter = 0;
+            var counter1 = 0;
+            var counter2 = 0;
+
+            var hc = new HotkeyCollectionInternal();
+            const Keys key = Keys.A;
+
+            const string description1 = "action1";
+            hc.RegisterHotkey(key, e => { counter++; counter1++; }, description1);
+            hc.RegisterHotkey(key, e => { counter++; counter2++; }, "action2");
+
+            //trigger hotkey
+            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(counter1, Is.EqualTo(1));
+            Assert.That(counter2, Is.EqualTo(1));
+            Assert.IsTrue(hc.GetHotkeys().First().First() == key);
+
+            //--- Act
+
+            hc.UnregisterHotkey(key, description1);
+
+            //---Assert
+
+            //same key that triggered the hotkey does not trigger it again
+            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            Assert.That(counter, Is.EqualTo(3));
+            Assert.That(counter1, Is.EqualTo(1));
+            Assert.That(counter2, Is.EqualTo(2));
+            Assert.IsTrue(hc.GetHotkeys().First().First() == key);
+        }
+
+        [Test]
+        public void HotkeyCollectionShouldUnregisterHotkeyAndAllActionsWhenNoDescriptionGiven() {
+            //--- Assemble
+            var counter = 0;
+            var counter1 = 0;
+            var counter2 = 0;
+
+            var hc = new HotkeyCollectionInternal();
+            const Keys key = Keys.A;
+
+            hc.RegisterHotkey(key, e => { counter++; counter1++; }, "action1");
+            hc.RegisterHotkey(key, e => { counter++; counter2++; }, "action2");
+
+            //trigger hotkey
+            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(counter1, Is.EqualTo(1));
+            Assert.That(counter2, Is.EqualTo(1));
+            Assert.IsTrue(hc.GetHotkeys().First().First() == key);
+
+            //--- Act
+
+            //unregister with no actionDescription given
+            hc.UnregisterHotkey(key);
+
+            //---Assert
+
+            //same key that triggered the hotkey does not trigger it again
+            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(counter1, Is.EqualTo(1));
+            Assert.That(counter2, Is.EqualTo(1));
+            Assert.IsFalse(hc.GetHotkeys().Any());
         }
 
         [SetUp]
@@ -640,6 +786,34 @@ namespace Dfust.Hotkeys.Tests {
             Assert.That(m_counter, Is.EqualTo(4), "Sequence4 failed");
         }
 
+        [Test]
+        public void ShouldRegisterTwoActionsUnderSamePath() {
+            //--- Assemble
+
+            var counter = 0;
+            var counter1 = 0;
+            var counter2 = 0;
+
+            var hc = new HotkeyCollectionInternal();
+
+            //Register two different actions for the same hotkey
+            hc.RegisterHotkey(Keys.G | Keys.Control, e => { counter++; counter1++; }, actionDescription: "action1");
+            hc.RegisterHotkey(Keys.G | Keys.Control, e => { counter++; counter2++; }, actionDescription: "action2");
+
+            //--- Act
+
+            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, new KeyEventArgs(Keys.G));
+            hc.OnKeyUp(null, new KeyEventArgs(Keys.G));
+            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+
+            //---Assert
+
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(counter1, Is.EqualTo(1));
+            Assert.That(counter2, Is.EqualTo(1));
+        }
+
         /// <summary>
         /// Test that it is possible to add and remove modifiers from any key
         /// </summary>
@@ -682,6 +856,8 @@ namespace Dfust.Hotkeys.Tests {
             const Keys keyB = Keys.B;
             const Keys ctrlA = Keys.A | Keys.Control;
 
+            const Keys ctrlZ = Keys.Z | Keys.Control;
+
             //--- Act
 
             hc.RegisterHotkey(new Keys[] { keyA, keyB }, TestMethod);
@@ -689,17 +865,39 @@ namespace Dfust.Hotkeys.Tests {
             hc.RegisterHotkey(new Keys[] { ctrlA, ctrlA, ctrlA }, TestMethod, "desc 3xCtrl+A");
             hc.RegisterHotkey(new Keys[] { keyA }, TestMethod, "desc A");
 
+            //register two actions to same hotkey
+            hc.RegisterHotkey(new Keys[] { ctrlZ }, TestMethod, "desc Z1");
+            hc.RegisterHotkey(new Keys[] { ctrlZ }, TestMethod, "desc Z2");
+
             //---Assert
             var desc = hc.ToString();
 
             var expected = "Registered Hotkeys:" + Environment.NewLine +
                            "- a (desc A)" + Environment.NewLine +
                            "- b (desc B)" + Environment.NewLine +
+                           "- Control+z (desc Z1)" + Environment.NewLine +
+                           "- Control+z (desc Z2)" + Environment.NewLine +
                            "- a, b" + Environment.NewLine +
                            "- Control+a, Control+a, Control+a (desc 3xCtrl+A)";
 
             Assert.That(desc, Is.EqualTo(expected));
             Console.WriteLine(desc);
+        }
+
+        [Test]
+        public void ShouldThrowWhenTryingToRegisterTwoActionsUnderSamePathWithSameDescription() {
+            //--- Assemble
+
+            var counter = 0;
+            var counter1 = 0;
+            var counter2 = 0;
+
+            var hc = new HotkeyCollectionInternal();
+
+            //Register two different actions for the same hotkey using the same description
+            const string actionDescription = "action1";
+            hc.RegisterHotkey(Keys.G | Keys.Control, e => { counter++; counter1++; }, actionDescription: actionDescription);
+            Assert.Throws<ArgumentException>(() => hc.RegisterHotkey(Keys.G | Keys.Control, e => { counter++; counter2++; }, actionDescription: actionDescription));
         }
 
         [Test]

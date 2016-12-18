@@ -47,7 +47,7 @@ namespace Dfust.Hotkeys {
         /// </summary>
         /// <param name="key">The hotkey.</param>
         /// <param name="action">The function to call when hotkey is detected.</param>
-        /// <param name="actionDescription">A description of action (optional).</param>
+        /// <param name="actionDescription">A description of the action (optional).</param>
         /// <param name="handled">
         /// Sets whether the corresponding KeyEvent will be handled after a hotkey was recognized.
         /// </param>
@@ -63,5 +63,23 @@ namespace Dfust.Hotkeys {
         /// Sets whether the corresponding KeyEvent will be handled after a hotkey was recognized.
         /// </param>
         void RegisterHotkey(IEnumerable<Keys> chord, Action<HotKeyEventArgs> action, string actionDescription = null, bool handled = true);
+
+        /// <summary>
+        /// Unregisters a hotkey.
+        /// </summary>
+        /// <param name="key">The hotkey.</param>
+        /// <param name="actionDescription">
+        /// A description of the action (optional). If left empty, all actions of this hotkey will be removed.
+        /// </param>
+        void UnregisterHotkey(Keys key, string actionDescription = null);
+
+        /// <summary>
+        /// Unregisters a chord.
+        /// </summary>
+        /// <param name="chord">The chord.</param>
+        /// <param name="actionDescription">
+        /// A description of the action (optional). If left empty, all actions of this hotkey will be removed.
+        /// </param>
+        void UnregisterHotkey(IEnumerable<Keys> chord, string actionDescription = null);
     }
 }
