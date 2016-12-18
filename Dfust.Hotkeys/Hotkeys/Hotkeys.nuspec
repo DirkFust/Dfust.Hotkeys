@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Dfust.Hotkeys.HotkeyCollection</id>
+    <version>1.0.0</version>
+    <title>HotkeyCollection</title>
+    <authors>dfust</authors>
+    <owners>dfust</owners>
+    <licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl>
+    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
+    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>An application for registering global (system wide) or application hotkeys. Can be used to register single key hotkeys (like "ctrl+alt+j") and multi key hotkeys (chords, like "ctrl+k, ctrl+c").</description>
+    <releaseNotes>First release.</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>hotkey shortcut chord</tags>
+	<packageTypes>
+      <packageType name="Dependency" />
+    </packageTypes>
+  </metadata>
+</package>
