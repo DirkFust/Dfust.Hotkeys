@@ -28,11 +28,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following set of attributes.
 // Change these attribute values to modify the information associated with an assembly.
 [assembly: AssemblyTitle("Hotkeys")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("An application for registering global (system wide) or application hotkeys. Can be used to register single key hotkeys (like 'ctrl + alt + j') and multi key hotkeys (chords, like 'ctrl + k, ctrl + c').")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("dfust")]
 [assembly: AssemblyProduct("Hotkeys")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCopyright("Copyright © Dirk Fust 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -49,8 +49,5 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers by using the '*'
 // as shown below: [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
-#if DEBUG
+[assembly: AssemblyVersion("1.0.*")]
 [assembly: InternalsVisibleTo("Dfust.Hotkeys.HotkeyCollection.Tests")]
-#endif

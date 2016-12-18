@@ -23,6 +23,7 @@
 
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Dfust.Hotkeys.Util;
 
 namespace Dfust.Hotkeys {
 
@@ -40,8 +41,29 @@ namespace Dfust.Hotkeys {
             Count = count;
         }
 
+        /// <summary>
+        /// Returns a human readable description of the hotkey/chord.
+        /// </summary>
+        /// <value>The name of the chord.</value>
+        public string ChordName { get { return Keys2String.ChordToString(Keys); } }
+
+        /// <summary>
+        /// Returns how often this hotkey was consecutively pressed. The first triggering is 1, every
+        /// consecutive triggering increments by one.
+        /// </summary>
+        /// <value>The count.</value>
         public int Count { get; }
+
+        /// <summary>
+        /// Returns the Keys of the hotkey/chord.
+        /// </summary>
+        /// <value>The keys.</value>
         public IList<Keys> Keys { get; }
+
+        /// <summary>
+        /// Returns the sender of the KeyEventArgs that triggered the hotkey.
+        /// </summary>
+        /// <value>The sender.</value>
         public object Sender { get; }
     }
 }
