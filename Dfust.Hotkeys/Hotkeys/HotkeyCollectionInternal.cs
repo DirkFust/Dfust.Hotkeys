@@ -35,9 +35,33 @@ namespace Dfust.Hotkeys {
         //Hotkeys with a fixed sequence of key strokes. For example "ctrl+v", or "ctrl+alt+g, ctrl+alt+p"
         private readonly NestedDictionary<Keys, Dictionary<string, HotkeyAction>> m_registeredHotkeys = new NestedDictionary<Keys, Dictionary<string, HotkeyAction>>();
 
+        //these are all modifier keys we know (although LWin is a bit special, since it is not a modifier key that can be added to another key via "bitwise or")
         private readonly Keys[] m_modifierKeys = { Keys.Control, Keys.Alt, Keys.Shift, Keys.LWin };
+
+        //buffers the last pressed keys and modifiers
         private LimitedQueue<KeysState> m_keyBuffer;
+
+        //holds the recognized subpath (if we registered the chord "a,b,c" and we received "a", then this will hold {"a"}. If we then receive "b",
+        //this will hold {"a","b"}. If we then receive "c", the chord will trigger and this list will be empty (since we completed the chord, there is no subpath anymore).
+        //If we received any other key than "c" in the last example, we would not trigger the chord (obviously) and the list would be empty, since no chord has that subpath
+        private List<Keys> m_currentActiveSubpath = new List<Keys>();
+
+        //holds the last triggered chord for counting the number of consecutively triggered chords
         private Tuple<string, int> m_lastExecutedChord;
+
+        /// <summary>
+        /// EventHandler for the ChordStartRecognized event
+        /// </summary>
+        /// <param name="e">
+        /// The <see cref="ChordStartRecognizedEventArgs"/> instance containing the event data.
+        /// </param>
+        public delegate void ChordStartRecognizedEventHandler(ChordStartRecognizedEventArgs e);
+
+        /// <summary>
+        /// Occurs when a valid beginning of a known chord is detected. If the chord/hotkey triggers,
+        /// this event will not fire.
+        /// </summary>
+        public event ChordStartRecognizedEventHandler ChordStartRecognized;
 
         /// <summary>
         /// Return all registered hotkeys.
@@ -67,11 +91,11 @@ namespace Dfust.Hotkeys {
             for (int i = 0; i < hotkeys.Count(); i++) {
                 var hotkey = hotkeys[i];
 
-                foreach (var xxx in m_registeredHotkeys.TryGetValue(hotkey.Chord).Item1) {
+                foreach (var item in m_registeredHotkeys.TryGetValue(hotkey.Chord).Item1) {
                     sb.Append("- ");
                     sb.Append(hotkey.Name);
 
-                    var desc = xxx.Value.Description;
+                    var desc = item.Value.Description;
 
                     if (!string.IsNullOrWhiteSpace(desc)) {
                         sb.Append($" ({desc})");
@@ -180,12 +204,19 @@ namespace Dfust.Hotkeys {
             return HotkeyDescription();
         }
 
+        /// <summary>
+        /// Notifies the HotkeyCollection of a key down event. The keys are expected to be cleaned
+        /// via a KeyUpDownCleaner
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="key">The key.</param>
         internal void OnKeyDown(object sender, Keys key) {
             OnKeyDown(sender, new KeyEventArgs(key));
         }
 
         /// <summary>
-        /// Notifies the HotkeyCollection of a key down event.
+        /// Notifies the HotkeyCollection of a key down event. The keys are expected to be cleaned
+        /// via a KeyUpDownCleaner
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
@@ -199,30 +230,38 @@ namespace Dfust.Hotkeys {
                 } else {
                     //we detected a non modifier key
                     var modifiers = state.Modifiers.Aggregate(Keys.None, (a, b) => a | b);
-                    state.AddKey((e.KeyCode | modifiers));
-                    var currentPath = GetCurrentPath();
+                    var key = e.KeyCode | modifiers;
+                    state.AddKey(key);
 
-                    //search in the key stroke history for chords/hotkeys.
-                    for (int i = currentPath.Count - 1; i >= 0; i--) {
-                        //Start with the last key and one by one take more keys
-                        var path = currentPath.Skip(i).ToList();
+                    //we add the current key optimistically to the active subpath... if we are wrong, the whole subpath gets cleared anyway
+                    m_currentActiveSubpath.Add(key);
 
-                        var actions = m_registeredHotkeys.TryGetValue(path).Item1;
+                    //we have to test whether the old chord start plus the current key is an existing subpath of any chord
+                    if (m_registeredHotkeys.ContainsSubpath(m_currentActiveSubpath)) {
+                        //Test whether the (existing, we know that now) subpath is a complete chord.
+                        var actions = m_registeredHotkeys.TryGetValue(m_currentActiveSubpath).Item1;
                         if (actions != null) {
-                            UpdateLastExecutedHotkey(path);
+                            UpdateLastExecutedHotkey(m_currentActiveSubpath);
 
                             e.Handled = actions.Values.Select(a => a.Handled).Aggregate(false, (a, b) => a || b);
 
                             foreach (var action in actions.Values) {
-                                action.Action(new HotKeyEventArgs(sender, path, count: m_lastExecutedChord.Item2));
+                                action.Action(new HotKeyEventArgs(sender, m_currentActiveSubpath, count: m_lastExecutedChord.Item2));
                             }
                             //if we found a valid chord, clear the buffer...
                             m_keyBuffer.Clear();
+                            m_currentActiveSubpath.Clear();
                             //...and create a new state that contains the still active modifiers, if any
-                            CreateAndEnqueueKeysState(state);
-
-                            break;
+                            CreateKeysState(state);
+                            EnqueState(state);
                         }
+
+                        if (m_currentActiveSubpath.Any()) {
+                            ChordStartRecognized?.Invoke(new ChordStartRecognizedEventArgs(m_currentActiveSubpath));
+                        }
+                    } else {
+                        //the last key is not part of a subpath of a chord, so clear the active subpath
+                        m_currentActiveSubpath.Clear();
                     }
                 }
             }
@@ -230,12 +269,19 @@ namespace Dfust.Hotkeys {
 
 #pragma warning disable RECS0154 // Parameter is never used
 
+        /// <summary>
+        /// Notifies the HotkeyCollection of a key up event. The keys are expected to be cleaned via
+        /// a KeyUpDownCleaner
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="key">The key.</param>
         internal void OnKeyUp(object sender, Keys key) {
-            OnKeyDown(sender, new KeyEventArgs(key));
+            OnKeyUp(sender, new KeyEventArgs(key));
         }
 
         /// <summary>
-        /// Notifies the HotkeyCollection of a key up event.
+        /// Notifies the HotkeyCollection of a key up event. The keys are expected to be cleaned via
+        /// a KeyUpDownCleaner
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
@@ -249,29 +295,34 @@ namespace Dfust.Hotkeys {
 
 #pragma warning restore RECS0154 // Parameter is never used
 
-        private KeysState CreateAndEnqueueKeysState(KeysState previousState = null) {
+        private KeysState CreateKeysState(KeysState previousState = null) {
             //If we have a previous state, then we need the active modifiers from that state in the new one.
             var state = previousState != null ? new KeysState(previousState) : new KeysState();
-            m_keyBuffer.Enqueue(state);
+            EnqueState(state);
             return state;
         }
 
+        private void EnqueState(KeysState state) {
+            m_keyBuffer.Enqueue(state);
+        }
+
         private KeysState GetCurrentKeysState() {
-#pragma warning disable CC0013 // Use ternary operator
             //Get the last latest entry of the buffer
             var lastState = (m_keyBuffer.Last(1));
             if (lastState == null) {
                 //no latest entry? Crate a new state!
-                return CreateAndEnqueueKeysState();
+                var state = CreateKeysState();
+                return state;
             } else {
                 //If we already added a "real" key (not a modifier), then we need a new state. If we only have added modifiers (or nothing) the lastState is fine
-                return lastState[0].KeyAdded ? CreateAndEnqueueKeysState(lastState.First()) : lastState.First();
+                if (lastState[0].KeyAdded) {
+                    var state = CreateKeysState(lastState.First());
+                    EnqueState(state);
+                    return state;
+                } else {
+                    return lastState.First();
+                }
             }
-#pragma warning restore CC0013 // Use ternary operator
-        }
-
-        private List<Keys> GetCurrentPath() {
-            return m_keyBuffer.Select((s) => s.Key).ToList();
         }
 
         private bool IsModifierKey(Keys key) {
@@ -298,8 +349,8 @@ namespace Dfust.Hotkeys {
         /// Returns the currently recognized keys of a chord.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Keys> GetCurrentlyRecognized() {
-            return m_keyBuffer.Where(state => state.KeyAdded).Select(state => state.Key);
+        public IEnumerable<Keys> GetCurrentlyRecognizedPartialChord() {
+            return m_currentActiveSubpath;
         }
 
         private class HotkeyAction {
@@ -401,6 +452,22 @@ namespace Dfust.Hotkeys {
                     }
                 }
             }
+        }
+    }
+
+    public class ChordStartRecognizedEventArgs {
+        private readonly IEnumerable<Keys> m_subpath;
+
+        public ChordStartRecognizedEventArgs(IEnumerable<Keys> subpath) {
+            m_subpath = subpath;
+        }
+
+        public string ChordSubpath {
+            get { return Keys2String.ChordToString(m_subpath); }
+        }
+
+        public IEnumerable<Keys> Subpath {
+            get { return m_subpath; }
         }
     }
 }

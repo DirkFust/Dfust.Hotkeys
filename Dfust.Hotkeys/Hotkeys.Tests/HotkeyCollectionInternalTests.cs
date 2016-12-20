@@ -295,44 +295,6 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldCancelChordOnEsc() {
-            //--- Assemble
-            var counter = 0;
-            var hc = new HotkeyCollectionInternal();
-            hc.RegisterHotkey(new Keys[] { Keys.A | Keys.Control, Keys.B | Keys.Control }, e => counter++);
-
-            //trigger chord once
-            hc.OnKeyDown(null, Keys.Control);
-
-            hc.OnKeyDown(null, Keys.A);
-            hc.OnKeyUp(null, Keys.A);
-
-            hc.OnKeyDown(null, Keys.B);
-            hc.OnKeyUp(null, Keys.B);
-
-            hc.OnKeyUp(null, Keys.Control);
-
-            //assert chord was triggered
-            Assert.That(counter, Is.EqualTo(1));
-
-            //--- Act
-
-            //trigger chord once
-            hc.OnKeyDown(null, Keys.Control);
-
-            hc.OnKeyDown(null, Keys.A);
-            hc.OnKeyUp(null, Keys.A);
-
-            hc.OnKeyDown(null, Keys.B);
-            hc.OnKeyUp(null, Keys.B);
-
-            hc.OnKeyUp(null, Keys.Control);
-
-            //---Assert
-            Assert.Fail("Test not implemented");
-        }
-
-        [Test]
         public void ShouldCountNumberOfConsecutivelyTriggersOfSameHotkey([Range(1, 10)] int pressCount, [Values(1, 5, 10)]int chordLength) {
             //--- Assemble
             var count = 1;
@@ -450,6 +412,73 @@ namespace Dfust.Hotkeys.Tests {
                     keySequence.Append($"  ->  ");
                 }
             }
+        }
+
+        [Test]
+        public void ShouldFireEventWhenStartOfChordIsRecognized() {
+            //--- Assemble
+            var counterSubpath = 0;
+            var counterTrigger = 0;
+
+            var hc = new HotkeyCollectionInternal();
+            hc.ChordStartRecognized += (e => counterSubpath++);
+
+            hc.RegisterHotkey(Keys.A, e => counterTrigger++);
+            hc.RegisterHotkey(new Keys[] { Keys.A, Keys.B }, e => counterTrigger++);
+            hc.RegisterHotkey(new Keys[] { Keys.C, Keys.D, Keys.E }, e => counterTrigger++);
+            hc.RegisterHotkey(new Keys[] { Keys.C, Keys.D, Keys.X }, e => counterTrigger++);
+
+            //--- Act
+
+            //Trigger the hotkey "A". Since it is complete with only one key, we have had no subpath
+            hc.OnKeyDown(null, Keys.A);
+            Assert.That(counterSubpath, Is.EqualTo(0));
+            Assert.That(counterTrigger, Is.EqualTo(1));
+
+            //Type "B". "A,B" would be a chord, but since "A" alone is a complete hotkey, we can never reach "A,B". So nothing happens with our counters
+            hc.OnKeyDown(null, Keys.B);
+            Assert.That(counterSubpath, Is.EqualTo(0));
+            Assert.That(counterTrigger, Is.EqualTo(1));
+
+            //Type "C". This is the first letter of two chords, so the event should fire
+            hc.OnKeyDown(null, Keys.C);
+            Assert.That(counterSubpath, Is.EqualTo(1));
+            Assert.That(counterTrigger, Is.EqualTo(1));
+
+            //Type "D". This is the second letter of two chords, so the event should fire again
+            hc.OnKeyDown(null, Keys.D);
+            Assert.That(counterSubpath, Is.EqualTo(2));
+            Assert.That(counterTrigger, Is.EqualTo(1));
+
+            //Type "X". This is the last letter of a chord, so the chord should trigger
+            hc.OnKeyDown(null, Keys.X);
+            Assert.That(counterSubpath, Is.EqualTo(2));
+            Assert.That(counterTrigger, Is.EqualTo(2));
+
+            //Type "D". This is the last letter of a chord, but we just triggered the other chord with the same beginning, so this is just a stray letter...
+            hc.OnKeyDown(null, Keys.D);
+            Assert.That(counterSubpath, Is.EqualTo(2));
+            Assert.That(counterTrigger, Is.EqualTo(2));
+
+            //Type "C". This is the first letter of two chords, so the event should fire
+            hc.OnKeyDown(null, Keys.C);
+            Assert.That(counterSubpath, Is.EqualTo(3));
+            Assert.That(counterTrigger, Is.EqualTo(2));
+
+            //Type "D". This is the second letter of two chords, so the event should fire again
+            hc.OnKeyDown(null, Keys.D);
+            Assert.That(counterSubpath, Is.EqualTo(4));
+            Assert.That(counterTrigger, Is.EqualTo(2));
+
+            //Type "E". This is the last letter of a chord, so the chord should trigger
+            hc.OnKeyDown(null, Keys.X);
+            Assert.That(counterSubpath, Is.EqualTo(4));
+            Assert.That(counterTrigger, Is.EqualTo(3));
+
+            //Type "K". This letter is not in any hotkey, so nothing happens
+            hc.OnKeyDown(null, Keys.K);
+            Assert.That(counterSubpath, Is.EqualTo(4));
+            Assert.That(counterTrigger, Is.EqualTo(3));
         }
 
         [Test]
@@ -939,22 +968,22 @@ namespace Dfust.Hotkeys.Tests {
             //--- Act
 
             //before we start typing there should be no recognized keys
-            var currentlyRecognized = hc.GetCurrentlyRecognized();
+            var currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.IsFalse(currentlyRecognized.Any());
 
             //Type lorem ipsum. Since none of it is the start of a hotkey,
             foreach (var c in loremIpsum) {
                 //press key
                 hc.OnKeyDown(null, new KeyEventArgs(Char2Keys(c)));
-                currentlyRecognized = hc.GetCurrentlyRecognized();
+                currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
 
                 //if key was 'a', this is the start of a Chord (namely "A, ctrl+x"). Since we never press control here, this chord is never finished and triggered
-                var expected = (c == 'a' ? 1 : 0);
+                var expected = (char.ToLower(c) == 'a' ? 1 : 0);
                 Assert.That(currentlyRecognized.Count(), Is.EqualTo(expected));
 
                 hc.OnKeyUp(null, new KeyEventArgs(Char2Keys(c)));
-                currentlyRecognized = hc.GetCurrentlyRecognized();
-                Assert.That(currentlyRecognized.Count(), Is.EqualTo(expected));
+                currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
+                Assert.That(currentlyRecognized.Count(), Is.EqualTo(expected), $"char '{c}'");
 
                 //assert that no chord was triggered
                 Assert.That(counter, Is.EqualTo(0));
@@ -964,31 +993,31 @@ namespace Dfust.Hotkeys.Tests {
 
             //press Control, no chord triggered and no start of chord recognized
             hc.OnKeyDown(null, Keys.Control);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.IsFalse(currentlyRecognized.Any());
             Assert.That(counter, Is.EqualTo(0));
 
             //press and release A, no chord triggered , but "ctrl+a" is recognized as the start of a chord
             hc.OnKeyDown(null, Keys.A);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.That(currentlyRecognized.Count(), Is.EqualTo(1));
             Assert.That(currentlyRecognized.Last(), Is.EqualTo(Keys.A | Keys.Control));
             Assert.That(counter, Is.EqualTo(0));
             hc.OnKeyUp(null, Keys.A);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.That(currentlyRecognized.Count(), Is.EqualTo(1));
             Assert.That(currentlyRecognized.Last(), Is.EqualTo(Keys.A | Keys.Control));
             Assert.That(counter, Is.EqualTo(0));
 
             //press and release B, no chord triggered , but "ctrl+a, ctrl+b" is recognized as the start of a chord
             hc.OnKeyDown(null, Keys.B);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.That(currentlyRecognized.Count(), Is.EqualTo(2));
             Assert.That(currentlyRecognized.First(), Is.EqualTo(Keys.A | Keys.Control));
             Assert.That(currentlyRecognized.Last(), Is.EqualTo(Keys.B | Keys.Control));
             Assert.That(counter, Is.EqualTo(0));
             hc.OnKeyUp(null, Keys.B);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.That(currentlyRecognized.Count(), Is.EqualTo(2));
             Assert.That(currentlyRecognized.First(), Is.EqualTo(Keys.A | Keys.Control));
             Assert.That(currentlyRecognized.Last(), Is.EqualTo(Keys.B | Keys.Control));
@@ -996,16 +1025,16 @@ namespace Dfust.Hotkeys.Tests {
 
             //press and release C, chord is finally triggered, so there is again no recognized chord start
             hc.OnKeyDown(null, Keys.C);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.That(currentlyRecognized.Count(), Is.EqualTo(0));
             Assert.That(counter, Is.EqualTo(1));
             hc.OnKeyUp(null, Keys.C);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.That(currentlyRecognized.Count(), Is.EqualTo(0));
             Assert.That(counter, Is.EqualTo(1));
 
             hc.OnKeyUp(null, Keys.Control);
-            currentlyRecognized = hc.GetCurrentlyRecognized();
+            currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
             Assert.That(currentlyRecognized.Count(), Is.EqualTo(0));
             Assert.That(counter, Is.EqualTo(1));
         }
