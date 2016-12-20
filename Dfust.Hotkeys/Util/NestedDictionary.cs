@@ -106,6 +106,33 @@ namespace Dfust.Hotkeys.Util {
         }
 
         /// <summary>
+        /// Determines whether the specified subpath exists in the NestedDictionary.
+        /// </summary>
+        /// <param name="subpath">The subpath.</param>
+        /// <returns>
+        /// <c>true</c> if the specified subpath exists in the NestedDictionary; otherwise, <c>false</c>.
+        /// </returns>
+        public bool ContainsSubpath(IEnumerable<TKey> subpath) {
+            var path = subpath.ToList();
+            var success = true;
+            var level = m_root;
+            for (var i = 0; i < subpath.Count(); i++) {
+                var key = path[i];
+                if (i < path.Count) {
+                    if (level.ContainsKey(key)) {
+                        var node = level[key];
+                        level = node.Dictionary;
+                    } else {
+                        success = false;
+                        break;
+                    }
+                }
+            }
+
+            return success;
+        }
+
+        /// <summary>
         /// Finds all paths in the dictionary that lead to a value.
         /// </summary>
         /// <returns></returns>

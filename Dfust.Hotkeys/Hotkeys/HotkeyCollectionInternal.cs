@@ -180,6 +180,10 @@ namespace Dfust.Hotkeys {
             return HotkeyDescription();
         }
 
+        internal void OnKeyDown(object sender, Keys key) {
+            OnKeyDown(sender, new KeyEventArgs(key));
+        }
+
         /// <summary>
         /// Notifies the HotkeyCollection of a key down event.
         /// </summary>
@@ -189,12 +193,11 @@ namespace Dfust.Hotkeys {
             if (m_keyBuffer != null) {
                 var state = GetCurrentKeysState();
 
-                if (IsModifierKey(e)) {
+                if (IsModifierKey(e.KeyData)) {
                     //If we detect a new modifier, add it to the state
                     state.AddModifier(e.KeyData);
                 } else {
                     //we detected a non modifier key
-
                     var modifiers = state.Modifiers.Aggregate(Keys.None, (a, b) => a | b);
                     state.AddKey((e.KeyCode | modifiers));
                     var currentPath = GetCurrentPath();
@@ -227,6 +230,10 @@ namespace Dfust.Hotkeys {
 
 #pragma warning disable RECS0154 // Parameter is never used
 
+        internal void OnKeyUp(object sender, Keys key) {
+            OnKeyDown(sender, new KeyEventArgs(key));
+        }
+
         /// <summary>
         /// Notifies the HotkeyCollection of a key up event.
         /// </summary>
@@ -234,7 +241,7 @@ namespace Dfust.Hotkeys {
         /// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
         internal void OnKeyUp(object sender, KeyEventArgs e) {
             var currentState = m_keyBuffer.Last(1);
-            if (currentState != null && IsModifierKey(e)) {
+            if (currentState != null && IsModifierKey(e.KeyData)) {
                 var keysState = currentState[0];
                 keysState.RemoveModifier(e.KeyData);
             }
@@ -267,8 +274,8 @@ namespace Dfust.Hotkeys {
             return m_keyBuffer.Select((s) => s.Key).ToList();
         }
 
-        private bool IsModifierKey(KeyEventArgs e) {
-            return m_modifierKeys.Contains(e.KeyData);
+        private bool IsModifierKey(Keys key) {
+            return m_modifierKeys.Contains(key);
         }
 
         private void UpdateKeyBuffer() {
@@ -285,6 +292,14 @@ namespace Dfust.Hotkeys {
                 m_lastExecutedChord = new Tuple<string, int>(chordName, 1);
             }
 #pragma warning restore CC0014 // Use ternary operator
+        }
+
+        /// <summary>
+        /// Returns the currently recognized keys of a chord.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Keys> GetCurrentlyRecognized() {
+            return m_keyBuffer.Where(state => state.KeyAdded).Select(state => state.Key);
         }
 
         private class HotkeyAction {

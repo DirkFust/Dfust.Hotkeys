@@ -69,7 +69,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == Release (
-  nuget pack $(ProjectPath) -Symbols -Properties Configuration=$(ConfigurationName) -IncludeReferencedProjects -OutputDirectory "$(SolutionDir)NuGetPackages"
+  nuget pack $(ProjectPath) -Properties Configuration=$(ConfigurationName) -IncludeReferencedProjects -OutputDirectory "$(SolutionDir)NuGetPackages"
 
 
 )</PostBuildEvent>

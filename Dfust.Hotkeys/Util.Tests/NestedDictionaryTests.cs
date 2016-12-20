@@ -34,14 +34,14 @@ namespace Dfust.Hotkeys.Util.Tests {
     public class NestedDictionaryTests {
 
         [Test]
-        public void InnerDictopnaryShouldNotBeNull() {
+        public void NestedDictionary_InnerDictopnaryShouldNotBeNull() {
             var dict = new NestedDictionary<int, int>();
             Assert.IsNotNull(dict.InnerDictionary);
             Assert.That(dict.InnerDictionary.Count, Is.EqualTo(0));
         }
 
         [Test]
-        public void ShouldClearEmptyDictionary() {
+        public void NestedDictionary_ShouldClearEmptyDictionary() {
             //--- Assemble
             var dict = new NestedDictionary<int, int>();
 
@@ -54,7 +54,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldCreateDictWhereOnePathIsACompletePrefixOfAnotherPath([Values(true, false)] bool doReverse) {
+        public void NestedDictionary_ShouldCreateDictWhereOnePathIsACompletePrefixOfAnotherPath([Values(true, false)] bool doReverse) {
             //--- Assemble
             var paths = new List<int[]>();
             var values = new List<int>();
@@ -85,7 +85,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldCreateDictWithMultiplePathsOfDepthN([Values(1, 2, 5, 10)] int n) {
+        public void NestedDictionary_ShouldCreateDictWithMultiplePathsOfDepthN([Values(1, 2, 5, 10)] int n) {
             //---Assemble
             var paths = new Dictionary<int, int[]>();
             for (var path = 1; path <= 4; path++) {
@@ -123,7 +123,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldCreateDictWithOnePathOfDepthN([Values(1, 2, 5, 10)] int n) {
+        public void NestedDictionary_ShouldCreateDictWithOnePathOfDepthN([Values(1, 2, 5, 10)] int n) {
             //---Assemble
             var keys = new int[n];
             for (var i = 1; i <= n; i++) {
@@ -149,7 +149,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldCreateDictWithTwoPathsOfDifferentDepth() {
+        public void NestedDictionary_ShouldCreateDictWithTwoPathsOfDifferentDepth() {
             //---Assemble
             var paths = new Dictionary<int, int[]>();
             //One path with depth 5 (all even numbers)
@@ -184,7 +184,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldCreateDictWithTwoPathsOfDifferentDepthAndPartiallySharedKeys() {
+        public void NestedDictionary_ShouldCreateDictWithTwoPathsOfDifferentDepthAndPartiallySharedKeys() {
             //---Assemble
             var paths = new Dictionary<int, int[]>();
             //One path with depth 5 (all even numbers). The first key (=> 2) appears in the second path, too!
@@ -219,7 +219,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldFindPathAndSubPath() {
+        public void NestedDictionary_ShouldFindPathAndSubPath() {
             //--- Assemble
             var path1 = new int[] { 1, 2, 3 };
             const int value1 = 158;
@@ -248,7 +248,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldFindPathsAndSubPath() {
+        public void NestedDictionary_ShouldFindPathsAndSubPath() {
             //--- Assemble
             var path1 = new int[] { 1, 2, 3 };
             const int value1 = 158;
@@ -287,7 +287,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldFindSinglePath([Values(1, 2, 3, 4, 10)] int pathLength) {
+        public void NestedDictionary_ShouldFindSinglePath([Values(1, 2, 3, 4, 10)] int pathLength) {
             //--- Assemble
             var path = Enumerable.Range(1, pathLength).ToArray();
             const int value = 158;
@@ -310,7 +310,31 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldInitializeDictionary() {
+        public void NestedDictionary_ShouldFindSubpathsInDictionary() {
+            //--- Assemble
+            var dict = new NestedDictionary<int, int>();
+
+            var path1 = new int[] { 1, 2, 3, 4, 5, 6 };
+            var path2 = new int[] { 1, 2, 3, 10, 20, 30 };
+            var path3 = new int[] { 21, 22, 23, 24, 25, 26 };
+
+            dict.Add(path1, 1000);
+            dict.Add(path2, 2000);
+            dict.Add(path3, 3000);
+
+            //--- Act
+
+            foreach (var path in new int[][] { path1, path2, path3 }) {
+                for (int i = 0; i < path.Length; i++) {
+                    var subpath = path.Take(i);
+                    //---Assert
+                    Assert.IsTrue(dict.ContainsSubpath(subpath));
+                }
+            }
+        }
+
+        [Test]
+        public void NestedDictionary_ShouldInitializeDictionary() {
             //---Act
             var dict = new NestedDictionary<int, double>();
             //---Assert
@@ -319,7 +343,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldNotContainDifferentPathWithSameLength() {
+        public void NestedDictionary_ShouldNotContainDifferentPathWithSameLength() {
             //---Assemble
             var path = new List<int> { 1, 5, 9 };
             var dict = new NestedDictionary<int, double>();
@@ -334,7 +358,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldNotContainLongerPath() {
+        public void NestedDictionary_ShouldNotContainLongerPath() {
             //---Assemble
             var path = new List<int> { 1, 5, 9 };
             var dict = new NestedDictionary<int, double>();
@@ -351,7 +375,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldNotContainShorterPath() {
+        public void NestedDictionary_ShouldNotContainShorterPath() {
             //---Assemble
             var path = new List<int> { 1, 5, 9 };
             var dict = new NestedDictionary<int, double>();
@@ -369,7 +393,27 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldRemoveLongPathsAndCheckForShortPathsToStillExist([Values(2, 3, 5, 10)]int maxPathLength) {
+        public void NestedDictionary_ShouldNotFindSubpathsInDictionary() {
+            //--- Assemble
+            var dict = new NestedDictionary<int, int>();
+
+            var path1 = new int[] { 1, 2, 3, 4, 5, 6 };
+
+            dict.Add(path1, 1000);
+
+            var subpaths = new List<int[]>();
+            subpaths.Add(new int[] { 2, 3 });
+            subpaths.Add(new int[] { 1, 2, 3, 5, 6 });
+            subpaths.Add(new int[] { 1, 2, 3, 4, 5, 6, 7 });
+
+            //---Assert
+            foreach (var subpath in subpaths) {
+                Assert.IsFalse(dict.ContainsSubpath(subpath));
+            }
+        }
+
+        [Test]
+        public void NestedDictionary_ShouldRemoveLongPathsAndCheckForShortPathsToStillExist([Values(2, 3, 5, 10)]int maxPathLength) {
             //--- Assemble
             var dict = new NestedDictionary<int, double>();
             for (int i = 1; i <= maxPathLength; i++) {
@@ -396,7 +440,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldRemovePath1([Values(1, 2, 5, 10)] int pathLength) {
+        public void NestedDictionary_ShouldRemovePath1([Values(1, 2, 5, 10)] int pathLength) {
             //--- Assemble
             var dict = new NestedDictionary<int, int>();
 
@@ -417,7 +461,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldRemovePath2([Values(true, false)] bool toggle) {
+        public void NestedDictionary_ShouldRemovePath2([Values(true, false)] bool toggle) {
             //--- Assemble
             var dict = new NestedDictionary<int, int>();
 
@@ -462,7 +506,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldRemovePath3([Values(true, false)] bool toggle) {
+        public void NestedDictionary_ShouldRemovePath3([Values(true, false)] bool toggle) {
             //--- Assemble
             var dict = new NestedDictionary<int, int>();
 
@@ -502,7 +546,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldRemovePath4([Values(true, false)] bool toggle, [Values(2, 3, 4, 10)] int pathLength) {
+        public void NestedDictionary_ShouldRemovePath4([Values(true, false)] bool toggle, [Values(2, 3, 4, 10)] int pathLength) {
             //--- Assemble
             var dict = new NestedDictionary<int, int>();
 
@@ -542,7 +586,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldRemoveShortPathsAndCheckForLongPathsToStillExist() {
+        public void NestedDictionary_ShouldRemoveShortPathsAndCheckForLongPathsToStillExist() {
             //--- Assemble
             var dict = new NestedDictionary<int, double>();
             for (int i = 1; i <= 10; i++) {
@@ -569,7 +613,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldReturnCorrectResultForTryGetValue() {
+        public void NestedDictionary_ShouldReturnCorrectResultForTryGetValue() {
             //---Assemble
 
             var dict = new NestedDictionary<int, double>();
@@ -640,7 +684,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldReturnCountOfLongestPath1() {
+        public void NestedDictionary_ShouldReturnCountOfLongestPath1() {
             //--- Assemble
             var dict = new NestedDictionary<int, int>();
 
@@ -661,7 +705,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldReturnCountOfLongestPath2() {
+        public void NestedDictionary_ShouldReturnCountOfLongestPath2() {
             //--- Assemble
             var dict = new NestedDictionary<int, int>();
             const int max = 3;
@@ -680,7 +724,7 @@ namespace Dfust.Hotkeys.Util.Tests {
         }
 
         [Test]
-        public void ShouldThrowWhenAddingTheSamePathTwice() {
+        public void NestedDictionary_ShouldThrowWhenAddingTheSamePathTwice() {
             //--- Assemble
             var path = new int[] { 1, 2, 3, 4 };
             const int value = 158;
