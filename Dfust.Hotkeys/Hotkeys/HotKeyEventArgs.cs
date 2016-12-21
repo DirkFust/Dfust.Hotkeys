@@ -29,16 +29,16 @@ namespace Dfust.Hotkeys {
 
     public class HotKeyEventArgs {
 
-        public HotKeyEventArgs(object sender, IList<Keys> keys, int count) {
+        public HotKeyEventArgs(object sender, IList<Keys> keys, int count, bool continuously = false, bool followUp = false) {
             Sender = sender;
             Keys = keys;
             Count = count;
+            //we can only be continuously if we are a follow up
+            Continuously = continuously && followUp;
+            FollowUp = followUp;
         }
 
-        public HotKeyEventArgs(object sender, Keys key, int count) {
-            Sender = sender;
-            Keys = new List<Keys>(new[] { key });
-            Count = count;
+        public HotKeyEventArgs(object sender, Keys key, int count, bool continuously = false) : this(sender, new List<Keys>(new[] { key }), count, continuously) {
         }
 
         /// <summary>
@@ -48,11 +48,29 @@ namespace Dfust.Hotkeys {
         public string ChordName { get { return Keys2String.ChordToString(Keys); } }
 
         /// <summary>
+        /// Returns whether this hotkey/chord was triggered continuously with the hotkey before it.
+        ///
+        /// A second hotkey is continuously with the first, if FollowUp is true and at least one
+        /// modifier was never released between the two hotkeys
+        /// </summary>
+        /// <value><c>true</c> if continuously; otherwise, <c>false</c>.</value>
+        public bool Continuously { get; }
+
+        /// <summary>
         /// Returns how often this hotkey was consecutively pressed. The first triggering is 1, every
         /// consecutive triggering increments by one.
         /// </summary>
         /// <value>The count.</value>
         public int Count { get; }
+
+        /// <summary>
+        /// Returns whether this hotkey/chord was a follow up to the hotkey before it.
+        ///
+        /// A hotkey is a follow up to another hotkey, if it is triggered directly after the first
+        /// hotkey without any key presses in between that belong to neither of the two hotkeys.
+        /// </summary>
+        /// <value><c>true</c> if [follow up]; otherwise, <c>false</c>.</value>
+        public bool FollowUp { get; }
 
         /// <summary>
         /// Returns the Keys of the hotkey/chord.

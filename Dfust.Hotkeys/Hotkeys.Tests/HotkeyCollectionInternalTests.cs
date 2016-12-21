@@ -37,12 +37,12 @@ namespace Dfust.Hotkeys.Tests {
         private const string loremIpsum = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren";
 
         [Test]
-        public void HotkeyCollectionShouldBeInstantiable() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldBeInstantiable() {
             Assert.DoesNotThrow(() => new HotkeyCollectionInternal());
         }
 
         [Test]
-        public void HotkeyCollectionShouldNotFireOnWrongModifier() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldNotFireOnWrongModifier() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -81,7 +81,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void HotkeyCollectionShouldNotThrowWhenTryingToUnregisterNotExistingHotkey() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldNotThrowWhenTryingToUnregisterNotExistingHotkey() {
             //--- Assemble
             var hc = new HotkeyCollectionInternal();
 
@@ -98,7 +98,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void HotkeyCollectionShouldRegisterSimpleHotkeyAndFireWhenDetected() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldRegisterSimpleHotkeyAndFireWhenDetected() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -124,7 +124,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void HotkeyCollectionShouldThrowWhenTryingToUnregisterHotkeysWithNonExistingActionDescription() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldThrowWhenTryingToUnregisterHotkeysWithNonExistingActionDescription() {
             //--- Assemble
             var counter = 0;
             var counter1 = 0;
@@ -151,7 +151,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void HotkeyCollectionShouldUnregisterHotkey() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldUnregisterHotkey() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -180,7 +180,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void HotkeyCollectionShouldUnregisterHotkeyAndActionSpecifiedByDescription() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldUnregisterHotkeyAndActionSpecifiedByDescription() {
             //--- Assemble
             var counter = 0;
             var counter1 = 0;
@@ -217,7 +217,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void HotkeyCollectionShouldUnregisterHotkeyAndAllActionsWhenNoDescriptionGiven() {
+        public void HotkeyCollectionInternal_HotkeyCollectionShouldUnregisterHotkeyAndAllActionsWhenNoDescriptionGiven() {
             //--- Assemble
             var counter = 0;
             var counter1 = 0;
@@ -254,7 +254,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldBeAbleToChangeTheHandledPropertyPerHotkey() {
+        public void HotkeyCollectionInternal_ShouldBeAbleToChangeTheHandledPropertyPerHotkey() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -295,7 +295,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldCountNumberOfConsecutivelyTriggersOfSameHotkey([Range(1, 10)] int pressCount, [Values(1, 5, 10)]int chordLength) {
+        public void HotkeyCollectionInternal_ShouldCountNumberOfConsecutivelyTriggersOfSameHotkey([Range(1, 10)] int pressCount, [Values(1, 5, 10)]int chordLength) {
             //--- Assemble
             var count = 1;
             var hc = new HotkeyCollectionInternal();
@@ -334,7 +334,7 @@ namespace Dfust.Hotkeys.Tests {
         /// </summary>
         /// <param name="chordLength">Length of the chord.</param>
         [Test]
-        public void ShouldDetectChordOfDifferentKeysInAnyPossibleCombinationOfKeystrokes([Values(1, 2, 3, 4)] int chordLength) {
+        public void HotkeyCollectionInternal_ShouldDetectChordOfDifferentKeysInAnyPossibleCombinationOfKeystrokes([Values(1, 2, 3, 4)] int chordLength) {
             //--- Assemble
             var counter = 0;
             //The first chordLength+2 letters of the alphabet. +2 so we have some letters that are not used in the chord
@@ -415,7 +415,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldFireEventWhenStartOfChordIsRecognized() {
+        public void HotkeyCollectionInternal_ShouldFireEventWhenStartOfChordIsRecognized() {
             //--- Assemble
             var counterSubpath = 0;
             var counterTrigger = 0;
@@ -482,7 +482,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldFireSameChordMultipleTimes([Values(1, 2, 3, 4, 5)] int chordLength, [Values(true, false)]bool useOnlyOneKeyForChords) {
+        public void HotkeyCollectionInternal_ShouldFireSameChordMultipleTimes([Values(1, 2, 3, 4, 5)] int chordLength, [Values(true, false)]bool useOnlyOneKeyForChords) {
             //--- Assemble
             var counter = 0;
 
@@ -538,7 +538,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldHaveCountOf1WhenTriggeringOtherHotkeyBetweenTwoTimesSameHotkey() {
+        public void HotkeyCollectionInternal_ShouldHaveCountOf1WhenTriggeringOtherHotkeyBetweenTwoTimesSameHotkey() {
             //--- Assemble
 
             var hc = new HotkeyCollectionInternal();
@@ -571,7 +571,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldListAllRegisteredHotkeys() {
+        public void HotkeyCollectionInternal_ShouldListAllRegisteredHotkeys() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -602,7 +602,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldNotFireWhenReleasingAllModifiersBetweenChord() {
+        public void HotkeyCollectionInternal_ShouldNotFireWhenReleasingAllModifiersBetweenChord() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -645,7 +645,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldRegisterComplexHotkeyWithMultipleKeyStrokesAndFire1() {
+        public void HotkeyCollectionInternal_ShouldRegisterComplexHotkeyWithMultipleKeyStrokesAndFire1() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -692,7 +692,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldRegisterComplexHotkeyWithMultipleKeyStrokesAndFire2() {
+        public void HotkeyCollectionInternal_ShouldRegisterComplexHotkeyWithMultipleKeyStrokesAndFire2() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -738,7 +738,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldRegisterComplexHotkeyWithMultipleKeyStrokesAndFire3() {
+        public void HotkeyCollectionInternal_ShouldRegisterComplexHotkeyWithMultipleKeyStrokesAndFire3() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -783,7 +783,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldRegisterHotkeyWithModifiers() {
+        public void HotkeyCollectionInternal_ShouldRegisterHotkeyWithModifiers() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -859,7 +859,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldRegisterTwoActionsUnderSamePath() {
+        public void HotkeyCollectionInternal_ShouldRegisterTwoActionsUnderSamePath() {
             //--- Assemble
 
             var counter = 0;
@@ -890,7 +890,7 @@ namespace Dfust.Hotkeys.Tests {
         /// Test that it is possible to add and remove modifiers from any key
         /// </summary>
         [Test]
-        public void ShouldRemoveModifiersFromKey() {
+        public void HotkeyCollectionInternal_ShouldRemoveModifiersFromKey() {
             //--- Assemble
             //These are the possible modifiers
             var modifiers = new Keys[] { Keys.Control, Keys.Shift, Keys.Alt };
@@ -921,7 +921,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldReturnAllHotkeysInHumanReadableForm() {
+        public void HotkeyCollectionInternal_ShouldReturnAllHotkeysInHumanReadableForm() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -958,7 +958,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldReturnCurrentlyRecognizedKeys() {
+        public void HotkeyCollectionInternal_ShouldReturnCurrentlyRecognizedKeys() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -1040,7 +1040,238 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldThrowWhenTryingToRegisterTwoActionsUnderSamePathWithSameDescription() {
+        public void HotkeyCollectionInternal_ShouldTellIfChordWasTriggeredAsFollowUp1() {
+            //--- Assemble
+            var counter = 0;
+            HotKeyEventArgs eventArgs = null;
+
+            var testCases = new List<Tuple<Keys, bool>> { new Tuple<Keys, bool>(Keys.None,true),     //No key pressed in between the hotkeys: followUp=true
+                                                          new Tuple<Keys, bool>(Keys.A,false),       //non modifier key pressed in between hotkeys: followUp=false
+                                                          new Tuple<Keys, bool>(Keys.Control,true),  //modifier key pressed in between hotkeys: followUp=true
+                                                          new Tuple<Keys, bool>(Keys.Alt,true),
+                                                          new Tuple<Keys, bool>(Keys.Shift,true)};
+
+            foreach (var testcase in testCases) {
+                counter = 0;
+                var hc = new HotkeyCollectionInternal();
+                hc.RegisterHotkey(Keys.G, e => { counter++; eventArgs = e; });
+
+                //Trigger the hotkey
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+
+                //The hotkey was triggered without any hotkey before it, so it can't be a follow up of another hotkey
+                Assert.That(counter, Is.EqualTo(1));
+                Assert.IsFalse(eventArgs.FollowUp);
+
+                var key = testcase.Item1;
+                if (key != Keys.None) {
+                    //Press a key that does not belong to the hotkey(s)
+                    hc.OnKeyDown(null, key);
+                    hc.OnKeyUp(null, key);
+                }
+
+                //Trigger the hotkey again
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+
+                //Now there was a hotkey before this, so whether it is a follow up depends on the key(s) pressed between them
+                Assert.That(counter, Is.EqualTo(2));
+                Assert.That(eventArgs.FollowUp, Is.EqualTo(testcase.Item2));
+            }
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldTellIfChordWasTriggeredAsFollowUp2() {
+            //--- Assemble
+            var counter = 0;
+            HotKeyEventArgs eventArgs = null;
+
+            var testCases = new List<Tuple<Keys, bool>> { new Tuple<Keys, bool>(Keys.None,true),     //No key pressed in between the hotkeys: followUp=true
+                                                          new Tuple<Keys, bool>(Keys.A,false),       //non modifier key pressed in between hotkeys: followUp=false
+                                                          new Tuple<Keys, bool>(Keys.Control,true),  //modifier key pressed in between hotkeys: followUp=true
+                                                          new Tuple<Keys, bool>(Keys.Alt,true),
+                                                          new Tuple<Keys, bool>(Keys.Shift,true)};
+
+            foreach (var testcase in testCases) {
+                counter = 0;
+                var hc = new HotkeyCollectionInternal();
+                hc.RegisterHotkey(Keys.G | Keys.Alt, e => { counter++; eventArgs = e; });
+                hc.RegisterHotkey(Keys.H | Keys.Shift, e => { counter++; eventArgs = e; });
+
+                //Trigger the first hotkey
+                hc.OnKeyDown(null, Keys.Alt);
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+                hc.OnKeyUp(null, Keys.Alt);
+
+                //The hotkey was triggered without any hotkey before it, so it can't be a follow up of another hotkey
+                Assert.That(counter, Is.EqualTo(1));
+                Assert.IsFalse(eventArgs.FollowUp);
+
+                var key = testcase.Item1;
+                if (key != Keys.None) {
+                    //Press a key that does not belong to the hotkey(s)
+                    hc.OnKeyDown(null, key);
+                    hc.OnKeyUp(null, key);
+                }
+
+                //Trigger the other hotkey
+                hc.OnKeyDown(null, Keys.Shift);
+                hc.OnKeyDown(null, Keys.H);
+                hc.OnKeyUp(null, Keys.H);
+                hc.OnKeyUp(null, Keys.Shift);
+                //Now there was a hotkey before this, so whether it is a follow up depends on the key(s) pressed between them
+                Assert.That(counter, Is.EqualTo(2));
+                Assert.That(eventArgs.FollowUp, Is.EqualTo(testcase.Item2));
+            }
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldTellIfChordWasTriggeredAsFollowUp3() {
+            //--- Assemble
+            var counter = 0;
+            HotKeyEventArgs eventArgs = null;
+
+            var testCases = new List<Tuple<Keys, bool>> { new Tuple<Keys, bool>(Keys.None,true),     //No key pressed in between the hotkeys: followUp=true
+                                                          new Tuple<Keys, bool>(Keys.A,false),       //non modifier key pressed in between hotkeys: followUp=false
+                                                          new Tuple<Keys, bool>(Keys.Control,true),  //modifier key pressed in between hotkeys: followUp=true
+                                                          new Tuple<Keys, bool>(Keys.Alt,true),
+                                                          new Tuple<Keys, bool>(Keys.Shift,true)};
+
+            foreach (var testcase in testCases) {
+                counter = 0;
+                var hc = new HotkeyCollectionInternal();
+                hc.RegisterHotkey(new Keys[] { Keys.G | Keys.Alt, Keys.A }, e => { counter++; eventArgs = e; });
+                hc.RegisterHotkey(new Keys[] { Keys.H | Keys.Shift, Keys.H | Keys.Shift }, e => { counter++; eventArgs = e; });
+
+                //Trigger the first chord
+                hc.OnKeyDown(null, Keys.Alt);
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+                hc.OnKeyUp(null, Keys.Alt);
+                hc.OnKeyDown(null, Keys.A);
+                hc.OnKeyUp(null, Keys.A);
+
+                //The hotkey was triggered without any hotkey before it, so it can't be a follow up of another hotkey
+                Assert.That(counter, Is.EqualTo(1));
+                Assert.IsFalse(eventArgs.FollowUp);
+
+                var key = testcase.Item1;
+                if (key != Keys.None) {
+                    //Press a key that does not belong to the hotkey(s)
+                    hc.OnKeyDown(null, key);
+                    hc.OnKeyUp(null, key);
+                }
+
+                //Trigger the other chord
+                hc.OnKeyDown(null, Keys.Shift);
+                hc.OnKeyDown(null, Keys.H);
+                hc.OnKeyUp(null, Keys.H);
+                hc.OnKeyDown(null, Keys.H);
+                hc.OnKeyUp(null, Keys.H);
+                hc.OnKeyUp(null, Keys.Shift);
+
+                //Now there was a hotkey before this, so whether it is a follow up depends on the key(s) pressed between them
+                Assert.That(counter, Is.EqualTo(2));
+                Assert.That(eventArgs.FollowUp, Is.EqualTo(testcase.Item2));
+            }
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldTellIfChordWasTriggeredContiniously1() {
+            //--- Assemble
+            var counter = 0;
+            HotKeyEventArgs eventArgs = null;
+
+            var testCases = new List<Keys> {Keys.None,    //No key pressed in between the hotkeys: followUp=true
+                                            Keys.A,       //non modifier key pressed in between hotkeys: followUp=false
+                                            Keys.Control, //modifier key pressed in between hotkeys: followUp=true
+                                            Keys.Alt,
+                                            Keys.Shift};
+
+            foreach (var key in testCases) {
+                counter = 0;
+                var hc = new HotkeyCollectionInternal();
+
+                //single key hotkey, no modifiers...
+                hc.RegisterHotkey(Keys.G, e => { counter++; eventArgs = e; });
+
+                //Trigger the hotkey
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+
+                //The hotkey was triggered without any hotkey before it, so it can't be continuously
+                Assert.That(counter, Is.EqualTo(1));
+                Assert.IsFalse(eventArgs.Continuously);
+
+                if (key != Keys.None) {
+                    //Press a key that does not belong to the hotkey(s)
+                    hc.OnKeyDown(null, key);
+                    hc.OnKeyUp(null, key);
+                }
+
+                //Trigger the hotkey again
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+
+                //Now there was a hotkey before this, so whether it is a follow up depends on the key(s) pressed between them
+                Assert.That(counter, Is.EqualTo(2));
+                Assert.IsFalse(eventArgs.Continuously);
+            }
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldTellIfChordWasTriggeredContiniously2([Values(true, false)] bool isContiuously, [Values(true, false)] bool insertKeyBetweenHotkeys) {
+            //--- Assemble
+            var counter = 0;
+            HotKeyEventArgs eventArgs = null;
+
+            counter = 0;
+            var hc = new HotkeyCollectionInternal();
+
+            //single key hotkey, no modifiers...
+            hc.RegisterHotkey(Keys.G | Keys.Control, e => { counter++; eventArgs = e; });
+
+            //Trigger the hotkey
+
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.G);
+            hc.OnKeyUp(null, Keys.G);
+
+            if (!isContiuously) {
+                hc.OnKeyUp(null, Keys.Control);
+            }
+
+            //The hotkey was triggered without any hotkey before it, so it can't be continuously
+            Assert.That(counter, Is.EqualTo(1));
+            Assert.IsFalse(eventArgs.Continuously);
+
+            if (insertKeyBetweenHotkeys) {
+                hc.OnKeyDown(null, Keys.A);
+                hc.OnKeyUp(null, Keys.A);
+            }
+
+            if (!isContiuously) {
+                hc.OnKeyDown(null, Keys.Control);
+            }
+
+            //Trigger the hotkey again
+            hc.OnKeyDown(null, Keys.G);
+            hc.OnKeyUp(null, Keys.G);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //Now there was a hotkey before this, so whether it is continuously depends on whether a key was pressed between them
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.IsFalse(eventArgs.Continuously);
+
+            Assert.That(eventArgs.Continuously, Is.EqualTo(isContiuously && !insertKeyBetweenHotkeys));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldThrowWhenTryingToRegisterTwoActionsUnderSamePathWithSameDescription() {
             //--- Assemble
 
             var counter = 0;
@@ -1056,7 +1287,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldTriggerChordWithDifferentPositionsPressingAndReleasingModifiers() {
+        public void HotkeyCollectionInternal_ShouldTriggerChordWithDifferentPositionsPressingAndReleasingModifiers() {
             //--- Assemble
             var counter = 0;
 
@@ -1140,7 +1371,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldTriggerTwoSimpleHotkeyConsecutively() {
+        public void HotkeyCollectionInternal_ShouldTriggerTwoSimpleHotkeyConsecutively() {
             //--- Assemble
             var counter = 0;
             var hc = new HotkeyCollectionInternal();
@@ -1164,7 +1395,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void ShouldUseHotkeysInTypicalSituation([Values(true, false)] bool pad) {
+        public void HotkeyCollectionInternal_ShouldUseHotkeysInTypicalSituation([Values(true, false)] bool pad) {
             //--- Assemble
 
             var ctrlC = 0;

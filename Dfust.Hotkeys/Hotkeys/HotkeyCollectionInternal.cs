@@ -49,6 +49,9 @@ namespace Dfust.Hotkeys {
         //holds the last triggered chord for counting the number of consecutively triggered chords
         private Tuple<string, int> m_lastExecutedChord;
 
+        //tracks whether a hotkeys follows directly after another hotkey
+        private bool m_isFollowUp;
+
         /// <summary>
         /// EventHandler for the ChordStartRecognized event
         /// </summary>
@@ -246,11 +249,12 @@ namespace Dfust.Hotkeys {
                             e.Handled = actions.Values.Select(a => a.Handled).Aggregate(false, (a, b) => a || b);
 
                             foreach (var action in actions.Values) {
-                                action.Action(new HotKeyEventArgs(sender, m_currentActiveSubpath, count: m_lastExecutedChord.Item2));
+                                action.Action(new HotKeyEventArgs(sender, m_currentActiveSubpath, count: m_lastExecutedChord.Item2, followUp: m_isFollowUp));
                             }
                             //if we found a valid chord, clear the buffer...
                             m_keyBuffer.Clear();
                             m_currentActiveSubpath.Clear();
+                            m_isFollowUp = true;
                             //...and create a new state that contains the still active modifiers, if any
                             CreateKeysState(state);
                             EnqueState(state);
@@ -262,6 +266,7 @@ namespace Dfust.Hotkeys {
                     } else {
                         //the last key is not part of a subpath of a chord, so clear the active subpath
                         m_currentActiveSubpath.Clear();
+                        m_isFollowUp = false;
                     }
                 }
             }
@@ -452,22 +457,6 @@ namespace Dfust.Hotkeys {
                     }
                 }
             }
-        }
-    }
-
-    public class ChordStartRecognizedEventArgs {
-        private readonly IEnumerable<Keys> m_subpath;
-
-        public ChordStartRecognizedEventArgs(IEnumerable<Keys> subpath) {
-            m_subpath = subpath;
-        }
-
-        public string ChordSubpath {
-            get { return Keys2String.ChordToString(m_subpath); }
-        }
-
-        public IEnumerable<Keys> Subpath {
-            get { return m_subpath; }
         }
     }
 }

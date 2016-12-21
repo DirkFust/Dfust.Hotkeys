@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChordStartRecognizedEventArgs.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="HotkeyCollection.cs" />
     <Compile Include="HotkeyCollectionInternal.cs" />
