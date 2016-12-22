@@ -52,6 +52,9 @@ namespace Dfust.Hotkeys {
         //tracks whether a hotkeys follows directly after another hotkey
         private bool m_isFollowUp;
 
+        //tracks whether a hotkey is continuously, that means in the same "modifier envelope" as the previous hotkey. Continuously = FollowUp and at least one modifier was not released between hotkeys
+        private bool m_isContinuously;
+
         /// <summary>
         /// EventHandler for the ChordStartRecognized event
         /// </summary>
@@ -249,12 +252,15 @@ namespace Dfust.Hotkeys {
                             e.Handled = actions.Values.Select(a => a.Handled).Aggregate(false, (a, b) => a || b);
 
                             foreach (var action in actions.Values) {
-                                action.Action(new HotKeyEventArgs(sender, m_currentActiveSubpath, count: m_lastExecutedChord.Item2, followUp: m_isFollowUp));
+                                action.Action(new HotKeyEventArgs(sender, m_currentActiveSubpath, count: m_lastExecutedChord.Item2, followUp: m_isFollowUp, continuously: m_isContinuously && m_isFollowUp));
                             }
                             //if we found a valid chord, clear the buffer...
                             m_keyBuffer.Clear();
                             m_currentActiveSubpath.Clear();
                             m_isFollowUp = true;
+
+                            m_isContinuously |= state.Modifiers.Any();
+
                             //...and create a new state that contains the still active modifiers, if any
                             CreateKeysState(state);
                             EnqueState(state);
@@ -267,6 +273,7 @@ namespace Dfust.Hotkeys {
                         //the last key is not part of a subpath of a chord, so clear the active subpath
                         m_currentActiveSubpath.Clear();
                         m_isFollowUp = false;
+                        m_isContinuously = false;
                     }
                 }
             }
@@ -295,6 +302,7 @@ namespace Dfust.Hotkeys {
             if (currentState != null && IsModifierKey(e.KeyData)) {
                 var keysState = currentState[0];
                 keysState.RemoveModifier(e.KeyData);
+                m_isContinuously &= keysState.Modifiers.Any();
             }
         }
 

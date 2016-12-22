@@ -1222,7 +1222,7 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
-        public void HotkeyCollectionInternal_ShouldTellIfChordWasTriggeredContiniously2([Values(true, false)] bool isContiuously, [Values(true, false)] bool insertKeyBetweenHotkeys) {
+        public void HotkeyCollectionInternal_ShouldTellIfChordWasTriggeredContinuously2([Values(true, false)] bool isContinuously, [Values(true, false)] bool insertKeyBetweenHotkeys) {
             //--- Assemble
             var counter = 0;
             HotKeyEventArgs eventArgs = null;
@@ -1240,7 +1240,7 @@ namespace Dfust.Hotkeys.Tests {
             hc.OnKeyDown(null, Keys.G);
             hc.OnKeyUp(null, Keys.G);
 
-            if (!isContiuously) {
+            if (!isContinuously) {
                 hc.OnKeyUp(null, Keys.Control);
             }
 
@@ -1253,7 +1253,7 @@ namespace Dfust.Hotkeys.Tests {
                 hc.OnKeyUp(null, Keys.A);
             }
 
-            if (!isContiuously) {
+            if (!isContinuously) {
                 hc.OnKeyDown(null, Keys.Control);
             }
 
@@ -1265,9 +1265,73 @@ namespace Dfust.Hotkeys.Tests {
 
             //Now there was a hotkey before this, so whether it is continuously depends on whether a key was pressed between them
             Assert.That(counter, Is.EqualTo(2));
-            Assert.IsFalse(eventArgs.Continuously);
 
-            Assert.That(eventArgs.Continuously, Is.EqualTo(isContiuously && !insertKeyBetweenHotkeys));
+            Assert.That(eventArgs.Continuously, Is.EqualTo(isContinuously && !insertKeyBetweenHotkeys));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldTellThatChordWasTriggeredContinuously([Values(true, false)] bool releaseAndPressKeysTogether) {
+            //--- Assemble
+            var counter = 0;
+            HotKeyEventArgs eventArgs = null;
+
+            var modifiers = new Keys[] { Keys.Control, Keys.Alt };
+            var modCombinations = SetOperations.GetPowerset(modifiers);
+
+            //single key hotkey, no modifiers...
+
+            foreach (var testcase in modCombinations) {
+                counter = 0;
+                var hc = new HotkeyCollectionInternal();
+                hc.RegisterHotkey(Keys.G | modifiers.Aggregate(Keys.None, (a, b) => a | b), e => { counter++; eventArgs = e; });
+                //press modifiers
+                hc.OnKeyDown(null, Keys.Control);
+                hc.OnKeyDown(null, Keys.Alt);
+
+                //Trigger the hotkey
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+
+                //The hotkey was triggered without any hotkey before it, so it can't be continuously
+                Assert.That(counter, Is.EqualTo(1));
+                Assert.IsFalse(eventArgs.Continuously);
+
+                //release key(s) and repress so the hotkey can trigger again
+                //if both modifiers get repressed here, continuously must be false, else it must be true
+
+                if (releaseAndPressKeysTogether) {
+                    //if we release an immediately re-press the key, then we never have a moment without any modifier active
+                    //even when we re-press both modifiers, re-pressing it immediately means the other modifier is still active.
+                    //we don't detect this, that's an edge case I don't want to do right now
+                    foreach (var key in testcase) {
+                        hc.OnKeyUp(null, key);
+                        hc.OnKeyDown(null, key);
+                    }
+                } else {
+                    //first release all modifiers to be released... (so we hit a "no modifiers active" state)
+                    foreach (var key in testcase) {
+                        hc.OnKeyUp(null, key);
+                    }
+
+                    //...then repress the modifier(s)
+                    foreach (var key in testcase) {
+                        hc.OnKeyDown(null, key);
+                    }
+                }
+
+                //Trigger the hotkey again
+                hc.OnKeyDown(null, Keys.G);
+                hc.OnKeyUp(null, Keys.G);
+
+                hc.OnKeyUp(null, Keys.Control);
+                hc.OnKeyUp(null, Keys.Alt);
+
+                //Now there was a hotkey before this, so whether it is continuously depends on whether a key was pressed between them
+                Assert.That(counter, Is.EqualTo(2));
+
+                //if both modifiers got released and pressed again in a way that we had a "no modifiers active" state, continuously must be false, else it must be true
+                Assert.That(eventArgs.Continuously, Is.EqualTo(testcase.Count() != 2 || releaseAndPressKeysTogether), $"test case: { Keys2String.ChordToString(testcase)}");
+            }
         }
 
         [Test]
