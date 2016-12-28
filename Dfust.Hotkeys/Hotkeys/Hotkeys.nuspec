@@ -14,7 +14,7 @@
       This library allows you to register application wide or global hotkeys.
       It can be used to register hotkeys  (one key, possibly multiple modifiers, like "ctrl+alt+j") and chords  (multi key hotkeys, like "ctrl+k, ctrl+c" or "ctrl+alt+x, b, q").
     </description>
-    <releaseNotes>Added FollowUp and Continuously properties to better describe hotkey events.</releaseNotes>
+    <releaseNotes>Added events for triggered hotkey/chord and "all modifiers released after a hotkey/chord was triggered".</releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>hotkey shortcut chord</tags>
     <dependencies>

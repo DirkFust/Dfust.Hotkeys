@@ -246,3 +246,4 @@ ModelManifest.xml
 
 #License Headers
 *.licenseheader
+/Dfust.Hotkeys/publishNewestPackageToNuGet.bat

@@ -53,6 +53,41 @@ namespace Dfust.Hotkeys {
         }
 
         /// <summary>
+        /// EventHandler for the AllModifiersReleasedAfterHotkey event
+        /// </summary>
+        /// <param name="e">The <see cref="HotKeyEventArgs"/> instance containing the event data.</param>
+        public delegate void AllModifiersReleasedAfterHotkeyEventHandler(HotKeyEventArgs e);
+
+        /// <summary>
+        /// EventHandler for the ChordStartRecognized event
+        /// </summary>
+        /// <param name="e">
+        /// The <see cref="ChordStartRecognizedEventArgs"/> instance containing the event data.
+        /// </param>
+        public delegate void ChordStartRecognizedEventHandler(ChordStartRecognizedEventArgs e);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="e">The <see cref="HotKeyEventArgs"/> instance containing the event data.</param>
+        public delegate void HotkeyTriggeredEventHandler(HotKeyEventArgs e);
+
+        /// <summary>
+        /// Occurs when a hotkey/chord was triggered and all modifiers keys are released.
+        /// </summary>
+        public event AllModifiersReleasedAfterHotkeyEventHandler AllModifiersReleasedAfterHotkey;
+
+        /// <summary>
+        /// Occurs when a valid beginning of a known chord is detected. If the chord/hotkey triggers,
+        /// this event will not fire.
+        /// </summary>
+        public event ChordStartRecognizedEventHandler ChordStartRecognized;
+
+        /// <summary>
+        /// Occurs when a hotkey or chord was triggered.
+        /// </summary>
+        public event HotkeyTriggeredEventHandler HotkeyTriggered;
+
+        /// <summary>
         /// Gets the scope of the hotkeys (global or application).
         /// </summary>
         /// <value>The scope.</value>
@@ -121,6 +156,18 @@ namespace Dfust.Hotkeys {
             }
         }
 
+        private void hotkeys_AllModifiersReleasedAfterHotkey(HotKeyEventArgs e) {
+            AllModifiersReleasedAfterHotkey?.Invoke(e);
+        }
+
+        private void hotkeys_ChordStartRecognized(ChordStartRecognizedEventArgs e) {
+            ChordStartRecognized?.Invoke(e);
+        }
+
+        private void hotkeys_HotkeyTriggered(HotKeyEventArgs e) {
+            HotkeyTriggered?.Invoke(e);
+        }
+
         /// <summary>
         /// Sets up the event subscriptions.
         /// </summary>
@@ -136,6 +183,11 @@ namespace Dfust.Hotkeys {
             //The cleaner in turn feeds into the HotkeyCollectionInternal
             m_cleaner.KeyDown += m_hotkeys.OnKeyDown;
             m_cleaner.KeyUp += m_hotkeys.OnKeyUp;
+
+            //subscribe to hotkey events and route them out
+            m_hotkeys.AllModifiersReleasedAfterHotkey += hotkeys_AllModifiersReleasedAfterHotkey;
+            m_hotkeys.ChordStartRecognized += hotkeys_ChordStartRecognized;
+            m_hotkeys.HotkeyTriggered += hotkeys_HotkeyTriggered;
         }
 
         /// <summary>
@@ -153,6 +205,11 @@ namespace Dfust.Hotkeys {
             //Unsubscribe from cleaner
             m_cleaner.KeyDown += m_hotkeys.OnKeyDown;
             m_cleaner.KeyUp += m_hotkeys.OnKeyUp;
+
+            //unsubscribe from hotkeys
+            m_hotkeys.ChordStartRecognized -= hotkeys_ChordStartRecognized;
+            m_hotkeys.AllModifiersReleasedAfterHotkey -= hotkeys_AllModifiersReleasedAfterHotkey;
+            m_hotkeys.HotkeyTriggered -= hotkeys_HotkeyTriggered;
         }
 
         #region IDisposable Support

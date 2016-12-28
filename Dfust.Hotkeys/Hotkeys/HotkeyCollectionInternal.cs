@@ -47,7 +47,7 @@ namespace Dfust.Hotkeys {
         private List<Keys> m_currentActiveSubpath = new List<Keys>();
 
         //holds the last triggered chord for counting the number of consecutively triggered chords
-        private Tuple<string, int> m_lastExecutedChord;
+        private LastExecutedChord m_lastExecutedChord;
 
         //tracks whether a hotkeys follows directly after another hotkey
         private bool m_isFollowUp;
@@ -68,6 +68,27 @@ namespace Dfust.Hotkeys {
         /// this event will not fire.
         /// </summary>
         public event ChordStartRecognizedEventHandler ChordStartRecognized;
+
+        /// <summary>
+        /// </summary>
+        /// <param name="e">The <see cref="HotKeyEventArgs"/> instance containing the event data.</param>
+        public delegate void HotkeyTriggeredEventHandler(HotKeyEventArgs e);
+
+        /// <summary>
+        /// Occurs when a hotkey or chord was triggered.
+        /// </summary>
+        public event HotkeyTriggeredEventHandler HotkeyTriggered;
+
+        /// <summary>
+        /// EventHandler for the AllModifiersReleasedAfterHotkey event
+        /// </summary>
+        /// <param name="e">The <see cref="HotKeyEventArgs"/> instance containing the event data.</param>
+        public delegate void AllModifiersReleasedAfterHotkeyEventHandler(HotKeyEventArgs e);
+
+        /// <summary>
+        /// Occurs when a hotkey/chord was triggered and all modifiers keys are released.
+        /// </summary>
+        public event AllModifiersReleasedAfterHotkeyEventHandler AllModifiersReleasedAfterHotkey;
 
         /// <summary>
         /// Return all registered hotkeys.
@@ -158,7 +179,7 @@ namespace Dfust.Hotkeys {
             if (!registeredActions.ContainsKey(key)) {
                 registeredActions.Add(key, hotkeyAction);
             } else {
-                throw new ArgumentException($"Two actions on the same chord have to differ in the description. chord: {hotkeyAction.ChordName}, description: '{ actionDescription }'.");
+                throw new ArgumentException($"Two actions on the same chord have to differ in the description. chord: {hotkeyAction.ChordName}, description: '{ actionDescription }'");
             }
         }
 
@@ -232,6 +253,10 @@ namespace Dfust.Hotkeys {
 
                 if (IsModifierKey(e.KeyData)) {
                     //If we detect a new modifier, add it to the state
+                    if (!state.Modifiers.Any() && m_lastExecutedChord != null) {
+                        m_lastExecutedChord.LastModifierEnvelopeCounter = null;
+                    }
+
                     state.AddModifier(e.KeyData);
                 } else {
                     //we detected a non modifier key
@@ -252,7 +277,20 @@ namespace Dfust.Hotkeys {
                             e.Handled = actions.Values.Select(a => a.Handled).Aggregate(false, (a, b) => a || b);
 
                             foreach (var action in actions.Values) {
-                                action.Action(new HotKeyEventArgs(sender, m_currentActiveSubpath, count: m_lastExecutedChord.Item2, followUp: m_isFollowUp, continuously: m_isContinuously && m_isFollowUp));
+                                var hotKeyEventArgs = new HotKeyEventArgs(sender,
+                                    m_currentActiveSubpath,
+                                    m_lastExecutedChord.Counter,
+                                    m_lastExecutedChord.ConsecutiveCounter,
+                                    m_lastExecutedChord.LastModifierEnvelopeCounter,
+                                    action.Description,
+                                    followUp: m_isFollowUp,
+                                    continuously: m_isContinuously && m_isFollowUp);
+
+                                //execute Action
+                                action.Action?.Invoke(hotKeyEventArgs);
+
+                                //Raise event
+                                HotkeyTriggered?.Invoke(hotKeyEventArgs);
                             }
                             //if we found a valid chord, clear the buffer...
                             m_keyBuffer.Clear();
@@ -274,6 +312,10 @@ namespace Dfust.Hotkeys {
                         m_currentActiveSubpath.Clear();
                         m_isFollowUp = false;
                         m_isContinuously = false;
+                        if (m_lastExecutedChord != null) {
+                            m_lastExecutedChord.ConsecutiveCounter = 0;
+                            m_lastExecutedChord.LastModifierEnvelopeCounter = null;
+                        }
                     }
                 }
             }
@@ -298,11 +340,31 @@ namespace Dfust.Hotkeys {
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
         internal void OnKeyUp(object sender, KeyEventArgs e) {
-            var currentState = m_keyBuffer.Last(1);
+            var currentState = m_keyBuffer?.Last(1);
             if (currentState != null && IsModifierKey(e.KeyData)) {
                 var keysState = currentState[0];
                 keysState.RemoveModifier(e.KeyData);
-                m_isContinuously &= keysState.Modifiers.Any();
+                var anyModifiersRemaining = keysState.Modifiers.Any();
+                m_isContinuously &= anyModifiersRemaining;
+
+                if (m_lastExecutedChord != null) {
+                    if (!anyModifiersRemaining) {
+                        var actions = m_registeredHotkeys.TryGetValue(m_lastExecutedChord.Keys).Item1;
+
+                        foreach (var action in actions) {
+                            var evenArgs = new HotKeyEventArgs(sender,
+                                                        m_lastExecutedChord.Keys,
+                                                        m_lastExecutedChord.Counter,
+                                                        m_lastExecutedChord.ConsecutiveCounter,
+                                                        m_lastExecutedChord.LastModifierEnvelopeCounter,
+                                                        action.Value.Description,
+                                                        followUp: m_isFollowUp,
+                                                        continuously: m_isContinuously && m_isFollowUp);
+
+                            AllModifiersReleasedAfterHotkey?.Invoke(evenArgs);
+                        }
+                    }
+                }
             }
         }
 
@@ -350,10 +412,16 @@ namespace Dfust.Hotkeys {
         private void UpdateLastExecutedHotkey(List<Keys> path) {
 #pragma warning disable CC0014 // Use ternary operator
             var chordName = Keys2String.ChordToString(path);
-            if (m_lastExecutedChord?.Item1 == chordName) {
-                m_lastExecutedChord = new Tuple<string, int>(chordName, m_lastExecutedChord.Item2 + 1);
+            if (m_lastExecutedChord?.ChordName == chordName) {
+                m_lastExecutedChord = new LastExecutedChord {
+                    Counter = m_lastExecutedChord.Counter + 1,
+                    ConsecutiveCounter = m_lastExecutedChord.ConsecutiveCounter + 1,
+                    LastModifierEnvelopeCounter = (m_lastExecutedChord.LastModifierEnvelopeCounter ?? 0) + 1,
+                    Keys = path.ToArray(),
+                    ChordName = chordName
+                };
             } else {
-                m_lastExecutedChord = new Tuple<string, int>(chordName, 1);
+                m_lastExecutedChord = new LastExecutedChord { Counter = 1, ConsecutiveCounter = 1, LastModifierEnvelopeCounter = 1, Keys = path.ToArray(), ChordName = chordName };
             }
 #pragma warning restore CC0014 // Use ternary operator
         }
@@ -465,6 +533,14 @@ namespace Dfust.Hotkeys {
                     }
                 }
             }
+        }
+
+        private class LastExecutedChord {
+            public string ChordName;
+            public int Counter;
+            public Keys[] Keys;
+            public int ConsecutiveCounter;
+            public int? LastModifierEnvelopeCounter;
         }
     }
 }

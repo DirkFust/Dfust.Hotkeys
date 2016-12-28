@@ -63,19 +63,19 @@ namespace Dfust.Hotkeys.Tests {
                 Assert.That(counter, Is.EqualTo(0));
 
                 //Modifier key down
-                hc.OnKeyDown(sender: null, e: new KeyEventArgs(item));
+                hc.OnKeyDown(null, item);
                 Assert.That(counter, Is.EqualTo(0));
 
                 //A+modifier key down
-                hc.OnKeyDown(sender: null, e: new KeyEventArgs(key));
+                hc.OnKeyDown(null, key);
                 Assert.That(counter, Is.EqualTo(0), $"key={item}");
 
                 //A+modifier key up
-                hc.OnKeyUp(sender: null, e: new KeyEventArgs(key));
+                hc.OnKeyUp(null, key);
                 Assert.That(counter, Is.EqualTo(0));
 
                 //Modifier key up
-                hc.OnKeyUp(sender: null, e: new KeyEventArgs(item));
+                hc.OnKeyUp(null, item);
                 Assert.That(counter, Is.EqualTo(0));
             }
         }
@@ -115,10 +115,10 @@ namespace Dfust.Hotkeys.Tests {
             for (int i = 0; i < 2; i++) {
                 counter = 0;
 
-                hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+                hc.OnKeyDown(null, Keys.A);
                 Assert.That(counter, Is.EqualTo(1));
 
-                hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+                hc.OnKeyUp(null, Keys.A);
                 Assert.That(counter, Is.EqualTo(1));
             }
         }
@@ -137,8 +137,8 @@ namespace Dfust.Hotkeys.Tests {
             hc.RegisterHotkey(key, e => { counter++; counter2++; }, "action2");
 
             //trigger hotkey
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(2));
             Assert.That(counter1, Is.EqualTo(1));
             Assert.That(counter2, Is.EqualTo(1));
@@ -161,8 +161,8 @@ namespace Dfust.Hotkeys.Tests {
 
             //trigger hotkey
             Assert.That(counter, Is.EqualTo(0));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(1));
             Assert.IsTrue(hc.GetHotkeys().First().First() == key);
 
@@ -173,8 +173,8 @@ namespace Dfust.Hotkeys.Tests {
             //---Assert
 
             //same key that triggered the hotkey does not trigger it again
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(1));
             Assert.IsFalse(hc.GetHotkeys().Any());
         }
@@ -194,8 +194,8 @@ namespace Dfust.Hotkeys.Tests {
             hc.RegisterHotkey(key, e => { counter++; counter2++; }, "action2");
 
             //trigger hotkey
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(2));
             Assert.That(counter1, Is.EqualTo(1));
             Assert.That(counter2, Is.EqualTo(1));
@@ -208,8 +208,8 @@ namespace Dfust.Hotkeys.Tests {
             //---Assert
 
             //same key that triggered the hotkey does not trigger it again
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(3));
             Assert.That(counter1, Is.EqualTo(1));
             Assert.That(counter2, Is.EqualTo(2));
@@ -230,8 +230,8 @@ namespace Dfust.Hotkeys.Tests {
             hc.RegisterHotkey(key, e => { counter++; counter2++; }, "action2");
 
             //trigger hotkey
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(2));
             Assert.That(counter1, Is.EqualTo(1));
             Assert.That(counter2, Is.EqualTo(1));
@@ -245,12 +245,27 @@ namespace Dfust.Hotkeys.Tests {
             //---Assert
 
             //same key that triggered the hotkey does not trigger it again
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(2));
             Assert.That(counter1, Is.EqualTo(1));
             Assert.That(counter2, Is.EqualTo(1));
             Assert.IsFalse(hc.GetHotkeys().Any());
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldAcceptNullAction() {
+            //--- Assemble
+            var hc = new HotkeyCollectionInternal();
+
+            hc.RegisterHotkey(Keys.A | Keys.Control, null);
+            //--- Act
+
+            //trigger hotkey
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            Assert.DoesNotThrow(() => hc.OnKeyUp(null, Keys.A));
+            Assert.DoesNotThrow(() => hc.OnKeyUp(null, Keys.Control));
         }
 
         [Test]
@@ -295,6 +310,58 @@ namespace Dfust.Hotkeys.Tests {
         }
 
         [Test]
+        public void HotkeyCollectionInternal_ShouldCountDifferentHotkeyMultipleTimes([Values(true, false)] bool sendNonHotkey) {
+            //--- Assemble
+
+            var counter = 0;
+            var hotkeyName = "";
+
+            var hc = new HotkeyCollectionInternal();
+            hc.AllModifiersReleasedAfterHotkey += e => { counter = e.Count; hotkeyName = e.ChordName; };
+            var hotkey1 = new Keys[] { Keys.A | Keys.Control };
+            var hotkey2 = new Keys[] { Keys.B | Keys.Control };
+            hc.RegisterHotkey(hotkey1, null);
+            hc.RegisterHotkey(hotkey2, null);
+
+            //--- Act
+
+            //Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //to this point we should have pressed the hotkey twice and the name should match
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey1)));
+
+            if (sendNonHotkey) {
+                hc.OnKeyDown(null, Keys.X);
+                hc.OnKeyUp(null, Keys.X);
+            }
+
+            //Let's do it again: Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.B);
+            hc.OnKeyUp(null, Keys.B);
+
+            hc.OnKeyDown(null, Keys.B);
+            hc.OnKeyUp(null, Keys.B);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //Whether we did or did not send a non-hotkey, we have pressed the hotkey 2 times consecutively, since we pressed a different hotkey than the first time
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey2)));
+        }
+
+        [Test]
         public void HotkeyCollectionInternal_ShouldCountNumberOfConsecutivelyTriggersOfSameHotkey([Range(1, 10)] int pressCount, [Values(1, 5, 10)]int chordLength) {
             //--- Assemble
             var count = 1;
@@ -306,26 +373,243 @@ namespace Dfust.Hotkeys.Tests {
             var chord = hotkeys.Select(key => key | Keys.Control);
 
             //Assert is hidden in the function to call on hotkey
-            hc.RegisterHotkey(chord, e => Assert.That(e.Count, Is.EqualTo(count)));
+            hc.RegisterHotkey(chord, e => { Assert.That(e.Count, Is.EqualTo(count)); Assert.That(e.DirectlyConsecutiveCount, Is.EqualTo(1)); });
             //--- Act
 
             for (int i = 1; i <= pressCount; i++) {
-                hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
+                hc.OnKeyDown(null, Keys.Control);
 
                 foreach (var key in hotkeys) {
-                    hc.OnKeyDown(null, new KeyEventArgs(key));
-                    hc.OnKeyUp(null, new KeyEventArgs(key));
+                    hc.OnKeyDown(null, key);
+                    hc.OnKeyUp(null, key);
                 }
 
-                hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+                hc.OnKeyUp(null, Keys.Control);
                 count++;
 
                 //Type lorem ipsum
                 foreach (var c in loremIpsum) {
-                    hc.OnKeyDown(null, new KeyEventArgs(Char2Keys(c)));
-                    hc.OnKeyUp(null, new KeyEventArgs(Char2Keys(c)));
+                    hc.OnKeyDown(null, Char2Keys(c));
+                    hc.OnKeyUp(null, Char2Keys(c));
                 }
             }
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldCountNumberOfTriggersInLastModifierEnvelope([Values(true, false)] bool sendDifferentHotkey) {
+            //--- Assemble
+            var hotkey1 = new Keys[] { Keys.A | Keys.Control };
+            var hotkey2 = new Keys[] { Keys.X | Keys.Control };
+
+            //some local values to
+            var counterConsecutive = 0;
+            int? counterEnvelopeFromEvent = -1;
+            int? counterEnvelopeFromAction = -1;
+
+            var counter = 0;
+            var hotkeyName = "";
+
+            var hc = new HotkeyCollectionInternal();
+
+            //When the event is raised, update all relevant local variables with values from the eventArgs
+            hc.AllModifiersReleasedAfterHotkey += e => {
+                counterConsecutive = e.DirectlyConsecutiveCount;
+                counter = e.Count;
+                counterEnvelopeFromEvent = e.LastModifierEnvelopeCount;
+                hotkeyName = e.ChordName;
+            };
+
+            //create an action that is registered for each hotkey. It just sets a variable to a property of the eventArgs
+            Action<HotKeyEventArgs> action = e => counterEnvelopeFromAction = e.LastModifierEnvelopeCount;
+
+            hc.RegisterHotkey(hotkey1, action);
+            hc.RegisterHotkey(hotkey2, action);
+
+            //--- Act
+
+            //Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            Assert.That(counterEnvelopeFromAction, Is.EqualTo(-1));
+            Assert.That(counterEnvelopeFromEvent, Is.EqualTo(-1));
+
+            hc.OnKeyDown(null, Keys.A);
+            Assert.That(counterEnvelopeFromAction, Is.EqualTo(1));
+            Assert.That(counterEnvelopeFromEvent, Is.EqualTo(-1));
+
+            hc.OnKeyUp(null, Keys.A);
+            Assert.That(counterEnvelopeFromAction, Is.EqualTo(1));
+            Assert.That(counterEnvelopeFromEvent, Is.EqualTo(-1));
+
+            hc.OnKeyDown(null, Keys.A);
+            Assert.That(counterEnvelopeFromAction, Is.EqualTo(2));
+            Assert.That(counterEnvelopeFromEvent, Is.EqualTo(-1));
+
+            hc.OnKeyUp(null, Keys.A);
+            Assert.That(counterEnvelopeFromAction, Is.EqualTo(2));
+            Assert.That(counterEnvelopeFromEvent, Is.EqualTo(-1));
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //at this point we should have pressed the hotkey twice and the name should match
+            Assert.That(counterConsecutive, Is.EqualTo(2));
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(counterEnvelopeFromEvent, Is.EqualTo(2));
+            Assert.That(counterEnvelopeFromAction, Is.EqualTo(2));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey1)));
+
+            if (sendDifferentHotkey) {
+                hc.OnKeyDown(null, Keys.Control);
+                hc.OnKeyDown(null, Keys.X);
+                Assert.That(counterEnvelopeFromAction, Is.EqualTo(1));
+                hc.OnKeyUp(null, Keys.X);
+                hc.OnKeyUp(null, Keys.Control);
+
+                Assert.That(counterConsecutive, Is.EqualTo(1));
+                Assert.That(counter, Is.EqualTo(1));
+                Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey2)));
+                Assert.That(counterEnvelopeFromEvent, Is.EqualTo(1));
+                Assert.That(counterEnvelopeFromAction, Is.EqualTo(1));
+            }
+
+            //Let's do it again: Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //if we did not send a non-hotkey, we have pressed the hotkey 4 times consecutively, else 2 times
+            var expected = sendDifferentHotkey ? 2 : 4;
+            //to this point we should have pressed the hotkey the right number of times and the name should match
+            Assert.That(counterConsecutive, Is.EqualTo(expected));
+            Assert.That(counter, Is.EqualTo(expected));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey1)));
+            Assert.That(counterEnvelopeFromEvent, Is.EqualTo(2));
+            Assert.That(counterEnvelopeFromAction, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldCountSameHotkeyMultipleTimes1([Values(true, false)] bool sendNonHotkey) {
+            //--- Assemble
+
+            var counterConsecutive = 0;
+            var counter = 0;
+            var hotkeyName = "";
+
+            var hc = new HotkeyCollectionInternal();
+            hc.AllModifiersReleasedAfterHotkey += e => { counterConsecutive = e.DirectlyConsecutiveCount; counter = e.Count; hotkeyName = e.ChordName; };
+            var hotkey = new Keys[] { Keys.A | Keys.Control };
+            hc.RegisterHotkey(hotkey, null);
+
+            //--- Act
+
+            //Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //to this point we should have pressed the hotkey twice and the name should match
+            Assert.That(counterConsecutive, Is.EqualTo(2));
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey)));
+
+            if (sendNonHotkey) {
+                hc.OnKeyDown(null, Keys.X);
+                hc.OnKeyUp(null, Keys.X);
+            }
+
+            //Let's do it again: Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //if we did not send a non-hotkey, we have pressed the hotkey 4 times consecutively, else 2 times
+            var expected = sendNonHotkey ? 2 : 4;
+            //to this point we should have pressed the hotkey the right number of times and the name should match
+            Assert.That(counterConsecutive, Is.EqualTo(expected));
+            Assert.That(counter, Is.EqualTo(4));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey)));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldCountSameHotkeyMultipleTimes2([Values(true, false)] bool sendDifferentHotkey) {
+            //--- Assemble
+            var hotkey1 = new Keys[] { Keys.A | Keys.Control };
+            var hotkey2 = new Keys[] { Keys.X | Keys.Control };
+
+            var counterConsecutive = 0;
+            var counter = 0;
+            var hotkeyName = "";
+
+            var hc = new HotkeyCollectionInternal();
+            hc.AllModifiersReleasedAfterHotkey += e => { counterConsecutive = e.DirectlyConsecutiveCount; counter = e.Count; hotkeyName = e.ChordName; };
+
+            hc.RegisterHotkey(hotkey1, null);
+            hc.RegisterHotkey(hotkey2, null);
+
+            //--- Act
+
+            //Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //to this point we should have pressed the hotkey twice and the name should match
+            Assert.That(counterConsecutive, Is.EqualTo(2));
+            Assert.That(counter, Is.EqualTo(2));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey1)));
+
+            if (sendDifferentHotkey) {
+                hc.OnKeyDown(null, Keys.Control);
+                hc.OnKeyDown(null, Keys.X);
+                hc.OnKeyUp(null, Keys.X);
+                hc.OnKeyUp(null, Keys.Control);
+
+                Assert.That(counterConsecutive, Is.EqualTo(1));
+                Assert.That(counter, Is.EqualTo(1));
+                Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey2)));
+            }
+
+            //Let's do it again: Press modifier, then press the hotkey twice
+            hc.OnKeyDown(null, Keys.Control);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            hc.OnKeyUp(null, Keys.Control);
+
+            //if we did not send a non-hotkey, we have pressed the hotkey 4 times consecutively, else 2 times
+            var expected = sendDifferentHotkey ? 2 : 4;
+            //to this point we should have pressed the hotkey the right number of times and the name should match
+            Assert.That(counterConsecutive, Is.EqualTo(expected));
+            Assert.That(counter, Is.EqualTo(expected));
+            Assert.That(hotkeyName, Is.EqualTo(Keys2String.ChordToString(hotkey1)));
         }
 
         /// <summary>
@@ -388,21 +672,21 @@ namespace Dfust.Hotkeys.Tests {
 
                         //press the modifier keys...
                         foreach (var modifier in shuffledModifiersKeyDown) {
-                            hc.OnKeyDown(null, new KeyEventArgs(modifier));
+                            hc.OnKeyDown(null, modifier);
                             keySequence.Append($"↓{modifier}");
                         }
 
                         keySequence.Append($" ");
                         //press the chord key
-                        hc.OnKeyDown(null, new KeyEventArgs(rawKey));
+                        hc.OnKeyDown(null, rawKey);
                         keySequence.Append($"↓{rawKey}");
-                        hc.OnKeyUp(null, new KeyEventArgs(rawKey));
+                        hc.OnKeyUp(null, rawKey);
                         keySequence.Append($"↑{rawKey}");
                         keySequence.Append($" ");
 
                         //release the modifier keys...
                         foreach (var modifier in shuffledModifiersKeyUp) {
-                            hc.OnKeyUp(null, new KeyEventArgs(modifier));
+                            hc.OnKeyUp(null, modifier);
                             keySequence.Append($"↑{modifier}");
                         }
                         keySequence.Append($"    ");
@@ -510,25 +794,25 @@ namespace Dfust.Hotkeys.Tests {
 
                     //Type lorem ipsum
                     foreach (var c in loremIpsum) {
-                        hc.OnKeyDown(null, new KeyEventArgs(Char2Keys(c)));
-                        hc.OnKeyUp(null, new KeyEventArgs(Char2Keys(c)));
+                        hc.OnKeyDown(null, Char2Keys(c));
+                        hc.OnKeyUp(null, Char2Keys(c));
                     }
 
                     for (int j = 0; j <= i; j++) {
                         //press modifier keys
                         foreach (var mod in modifier) {
-                            hc.OnKeyDown(null, new KeyEventArgs(mod));
+                            hc.OnKeyDown(null, mod);
                         }
 
                         //press chord keys
                         foreach (var key in chord) {
-                            hc.OnKeyDown(null, new KeyEventArgs(key));
-                            hc.OnKeyUp(null, new KeyEventArgs(key));
+                            hc.OnKeyDown(null, key);
+                            hc.OnKeyUp(null, key);
                         }
 
                         //release modifier keys
                         foreach (var mod in modifier) {
-                            hc.OnKeyUp(null, new KeyEventArgs(mod));
+                            hc.OnKeyUp(null, mod);
                         }
                     }
                     //---Assert
@@ -552,22 +836,42 @@ namespace Dfust.Hotkeys.Tests {
             //--- Act
 
             //we trigger hotkey1 and expect a count of 1 (see Assert when registering hotkey)
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(hotkey1));
-            hc.OnKeyUp(null, new KeyEventArgs(hotkey1));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, hotkey1);
+            hc.OnKeyUp(null, hotkey1);
+            hc.OnKeyUp(null, Keys.Control);
 
             //we trigger another hotkey (hotkey2) and expect a count of 1, because it was triggered the first time consecutively (see Assert when registering hotkey)
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(hotkey2));
-            hc.OnKeyUp(null, new KeyEventArgs(hotkey2));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, hotkey2);
+            hc.OnKeyUp(null, hotkey2);
+            hc.OnKeyUp(null, Keys.Control);
 
             //we trigger hotkey1 again and expect a count of 1 again, because it was not triggered directly after it's first triggering
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(hotkey1));
-            hc.OnKeyUp(null, new KeyEventArgs(hotkey1));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, hotkey1);
+            hc.OnKeyUp(null, hotkey1);
+            hc.OnKeyUp(null, Keys.Control);
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldHaveDescriptionIn() {
+            //--- Assemble
+
+            var counter = 0;
+            var hc = new HotkeyCollectionInternal();
+            hc.HotkeyTriggered += e => counter++;
+
+            hc.RegisterHotkey(Keys.A | Keys.Control, null);
+            //--- Act
+
+            //trigger hotkey
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Control);
+
+            Assert.That(counter, Is.EqualTo(1));
         }
 
         [Test]
@@ -604,8 +908,10 @@ namespace Dfust.Hotkeys.Tests {
         [Test]
         public void HotkeyCollectionInternal_ShouldNotFireWhenReleasingAllModifiersBetweenChord() {
             //--- Assemble
-            var counter = 0;
+            var counterHotkeyAction = 0;
+            var counterAllModifiersReleased = 0;
             var hc = new HotkeyCollectionInternal();
+            hc.AllModifiersReleasedAfterHotkey += e => counterAllModifiersReleased++;
 
             var modifiers = new Keys[]
             {
@@ -621,27 +927,226 @@ namespace Dfust.Hotkeys.Tests {
 
                 var chord = new Keys[] { key1, key2 };
                 //--- Act
-                hc.RegisterHotkey(chord, e => counter++);
+                hc.RegisterHotkey(chord, e => counterHotkeyAction++);
 
                 //---Assert
 
                 //Press modifier and A and release both. No hotkey should trigger.
-                Assert.That(counter, Is.EqualTo(0));
-                hc.OnKeyDown(sender: null, e: new KeyEventArgs(modifier));
-                Assert.That(counter, Is.EqualTo(0));
-                hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
-                Assert.That(counter, Is.EqualTo(0));
-                hc.OnKeyUp(sender: null, e: new KeyEventArgs(modifier));
-                Assert.That(counter, Is.EqualTo(0));
+                Assert.That(counterHotkeyAction, Is.EqualTo(0));
+                Assert.That(counterAllModifiersReleased, Is.EqualTo(0));
+                hc.OnKeyDown(null, modifier);
+                Assert.That(counterHotkeyAction, Is.EqualTo(0));
+                Assert.That(counterAllModifiersReleased, Is.EqualTo(0));
+                hc.OnKeyDown(null, Keys.A);
+                Assert.That(counterHotkeyAction, Is.EqualTo(0));
+                Assert.That(counterAllModifiersReleased, Is.EqualTo(0));
+                hc.OnKeyUp(null, modifier);
+                Assert.That(counterHotkeyAction, Is.EqualTo(0));
+                Assert.That(counterAllModifiersReleased, Is.EqualTo(0));
 
                 //Press modifier and B and release both.  No hotkey should trigger.
-                hc.OnKeyDown(sender: null, e: new KeyEventArgs(modifier));
-                Assert.That(counter, Is.EqualTo(0));
-                hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.B));
-                Assert.That(counter, Is.EqualTo(0));
-                hc.OnKeyUp(sender: null, e: new KeyEventArgs(modifier));
-                Assert.That(counter, Is.EqualTo(0));
+                hc.OnKeyDown(null, modifier);
+                Assert.That(counterHotkeyAction, Is.EqualTo(0));
+                Assert.That(counterAllModifiersReleased, Is.EqualTo(0));
+                hc.OnKeyUp(null, Keys.B);
+                Assert.That(counterHotkeyAction, Is.EqualTo(0));
+                Assert.That(counterAllModifiersReleased, Is.EqualTo(0));
+                hc.OnKeyUp(null, modifier);
+                Assert.That(counterHotkeyAction, Is.EqualTo(0));
+                Assert.That(counterAllModifiersReleased, Is.EqualTo(0));
             }
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldNotRaise_AllModifiersReleasedAfterHotkey() {
+            //--- Assemble
+            var counterFinished = 0;
+            var counterStarted = 0;
+
+            var hc = new HotkeyCollectionInternal();
+            hc.RegisterHotkey(new Keys[] { Keys.A | Keys.Control, Keys.B | Keys.Control }, null);
+            hc.AllModifiersReleasedAfterHotkey += e => counterFinished++;
+            hc.ChordStartRecognized += e => counterStarted++;
+
+            //--- Act
+
+            //press modifier
+            hc.OnKeyDown(null, Keys.Control);
+
+            //start the chord
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+
+            //we started a chord and finished none
+            Assert.That(counterFinished, Is.EqualTo(0));
+            Assert.That(counterStarted, Is.EqualTo(1));
+
+            //continue with a non-chord key
+            hc.OnKeyDown(null, Keys.C);
+            hc.OnKeyUp(null, Keys.C);
+
+            //right now we have not started a chord (so we did not add one to  counterStarted again) and finished none
+            Assert.That(counterFinished, Is.EqualTo(0));
+            Assert.That(counterStarted, Is.EqualTo(1));
+
+            //release modifier
+            hc.OnKeyUp(null, Keys.Control);
+
+            //right now we have not started a chord (so we did not add one to  counterStarted again) and finished none
+            Assert.That(counterFinished, Is.EqualTo(0));
+            Assert.That(counterStarted, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldNotRaiseEventOnHotkeyTriggeredWhenNoModifiersAreReleased1() {
+            //--- Assemble
+            var counter = 0;
+            var hc = new HotkeyCollectionInternal();
+            hc.RegisterHotkey(Keys.A, null);
+            hc.AllModifiersReleasedAfterHotkey += e => counter++;
+
+            //--- Act
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            Assert.That(counter, Is.EqualTo(0));
+            hc.OnKeyUp(null, Keys.Control);
+
+            Assert.That(counter, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldPassActionDescriptionToOnAllModifiersAreReleasedEvent() {
+            //--- Assemble
+            var counter = 0;
+            var hc = new HotkeyCollectionInternal();
+
+            const string description = "actionDescription";
+            hc.RegisterHotkey(Keys.A | Keys.Control, null, description);
+            hc.AllModifiersReleasedAfterHotkey += e => { counter++; Assert.That(e.Description, Is.EqualTo(description)); };
+
+            //--- Act
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            Assert.That(counter, Is.EqualTo(0));
+            hc.OnKeyUp(null, Keys.Control);
+
+            Assert.That(counter, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldRaiseEventForHotkeyTriggered() {
+            //--- Assemble
+
+            var counter = 0;
+            var hc = new HotkeyCollectionInternal();
+            hc.HotkeyTriggered += e => counter++;
+
+            hc.RegisterHotkey(Keys.A | Keys.Control, null);
+            //--- Act
+
+            //trigger hotkey
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Control);
+
+            Assert.That(counter, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldRaiseEventOnChordTriggeredWhenAllModifiersAreReleased1() {
+            //--- Assemble
+            var counter = 0;
+            var hc = new HotkeyCollectionInternal();
+            hc.RegisterHotkey(new Keys[] { Keys.A | Keys.Control, Keys.B | Keys.Control }, null);
+            hc.AllModifiersReleasedAfterHotkey += e => counter++;
+
+            //--- Act
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyDown(null, Keys.B);
+            hc.OnKeyUp(null, Keys.B);
+            Assert.That(counter, Is.EqualTo(0));
+            hc.OnKeyUp(null, Keys.Control);
+
+            Assert.That(counter, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldRaiseEventOnHotkeyTriggeredWhenAllModifiersAreReleased1() {
+            //--- Assemble
+            var counter = 0;
+            var hc = new HotkeyCollectionInternal();
+            hc.RegisterHotkey(Keys.A | Keys.Control, null);
+            hc.AllModifiersReleasedAfterHotkey += e => counter++;
+
+            //--- Act
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            Assert.That(counter, Is.EqualTo(0));
+            hc.OnKeyUp(null, Keys.Control);
+
+            Assert.That(counter, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void HotkeyCollectionInternal_ShouldRaiseEventOnHotkeyTriggeredWhenAllModifiersAreReleased2([Values(true, false)] bool twoHotkeys, [Values(true, false)] bool toggleReleaseSequence) {
+            //--- Assemble
+            var counterModifiersReleased = 0;
+            var counterHotkeyEvent = 0;
+            var counterHotkeyAction = 0;
+            var hc = new HotkeyCollectionInternal();
+            hc.RegisterHotkey(Keys.A | Keys.Control | Keys.Alt, e => counterHotkeyAction++);
+
+            //register another hotkey, if we say so
+            if (twoHotkeys) {
+                hc.RegisterHotkey(Keys.B | Keys.Control | Keys.Alt, e => counterHotkeyAction++);
+            }
+
+            hc.AllModifiersReleasedAfterHotkey += e => counterModifiersReleased++;
+            hc.HotkeyTriggered += e => counterHotkeyEvent++;
+
+            //--- Act
+
+            //press both modifiers
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.Alt);
+
+            //press and release hotkey
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            Assert.That(counterModifiersReleased, Is.EqualTo(0));
+            Assert.That(counterHotkeyAction, Is.EqualTo(1));
+            Assert.That(counterHotkeyEvent, Is.EqualTo(1));
+
+            //if we have two hotkeys, press and release the other
+            if (twoHotkeys) {
+                hc.OnKeyDown(null, Keys.B);
+                hc.OnKeyUp(null, Keys.B);
+
+                Assert.That(counterModifiersReleased, Is.EqualTo(0));
+                Assert.That(counterHotkeyAction, Is.EqualTo(2));
+                Assert.That(counterHotkeyEvent, Is.EqualTo(2));
+            }
+
+            //release both modifiers, try every sequence
+            if (toggleReleaseSequence) {
+                hc.OnKeyUp(null, Keys.Control);
+            } else {
+                hc.OnKeyUp(null, Keys.Alt);
+            }
+            Assert.That(counterModifiersReleased, Is.EqualTo(0));
+            if (toggleReleaseSequence) {
+                hc.OnKeyUp(null, Keys.Alt);
+            } else {
+                hc.OnKeyUp(null, Keys.Control);
+            }
+
+            Assert.That(counterModifiersReleased, Is.EqualTo(1));
         }
 
         [Test]
@@ -673,19 +1178,19 @@ namespace Dfust.Hotkeys.Tests {
 
                     //Keys.A with Keys.Control alone is not a hotkey...
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(modifier));
+                    hc.OnKeyDown(null, modifier);
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+                    hc.OnKeyDown(null, Keys.A);
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+                    hc.OnKeyUp(null, Keys.A);
                     Assert.That(counter, Is.EqualTo(0));
 
                     //But with Keys.B and Control it is
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.B));
+                    hc.OnKeyDown(null, Keys.B);
                     Assert.That(counter, Is.EqualTo(1), $"modifier: {modifier}, round:{i}");
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.B));
+                    hc.OnKeyUp(null, Keys.B);
                     Assert.That(counter, Is.EqualTo(1));
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(modifier));
+                    hc.OnKeyUp(null, modifier);
                     Assert.That(counter, Is.EqualTo(1));
                 }
             }
@@ -719,19 +1224,19 @@ namespace Dfust.Hotkeys.Tests {
                     counter = 0;
                     //Keys.A with modifier alone is not a hotkey...
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(modifier));
+                    hc.OnKeyDown(null, modifier);
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+                    hc.OnKeyDown(null, Keys.A);
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+                    hc.OnKeyUp(null, Keys.A);
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(modifier));
+                    hc.OnKeyUp(null, modifier);
                     Assert.That(counter, Is.EqualTo(0));
 
                     //But with Keys.B it is
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.B));
+                    hc.OnKeyDown(null, Keys.B);
                     Assert.That(counter, Is.EqualTo(1));
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.B));
+                    hc.OnKeyUp(null, Keys.B);
                     Assert.That(counter, Is.EqualTo(1));
                 }
             }
@@ -764,19 +1269,19 @@ namespace Dfust.Hotkeys.Tests {
                     counter = 0;
                     //Keys.A alone is not a hotkey...
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+                    hc.OnKeyDown(null, Keys.A);
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+                    hc.OnKeyUp(null, Keys.A);
                     Assert.That(counter, Is.EqualTo(0));
 
                     //But with Keys.B and modifier it is
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(modifier));
+                    hc.OnKeyDown(null, modifier);
                     Assert.That(counter, Is.EqualTo(0));
-                    hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.B));
+                    hc.OnKeyDown(null, Keys.B);
                     Assert.That(counter, Is.EqualTo(1), $"{modifier}");
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.B));
+                    hc.OnKeyUp(null, Keys.B);
                     Assert.That(counter, Is.EqualTo(1));
-                    hc.OnKeyUp(sender: null, e: new KeyEventArgs(modifier));
+                    hc.OnKeyUp(null, modifier);
                     Assert.That(counter, Is.EqualTo(1));
                 }
             }
@@ -796,65 +1301,65 @@ namespace Dfust.Hotkeys.Tests {
 
             //Just Keys.A is not a hotkey without modifiers
             Assert.That(counter, Is.EqualTo(0));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.A);
             Assert.That(counter, Is.EqualTo(0));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyUp(null, Keys.A);
             Assert.That(counter, Is.EqualTo(0));
 
             //Keys.A and just Control is not a hotkey
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
             Assert.That(counter, Is.EqualTo(0));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Control));
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Control);
             Assert.That(counter, Is.EqualTo(0));
 
             //Keys.A and just Alt is not a hotkey
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Alt));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.Alt);
+            hc.OnKeyDown(null, Keys.A);
             Assert.That(counter, Is.EqualTo(0));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Alt));
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Alt);
             Assert.That(counter, Is.EqualTo(0));
 
             //With Control and Alt Keys.A is a hotkey. Sequence1 of pressing and releasing ctrl and alt
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Alt));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.Alt);
+            hc.OnKeyDown(null, Keys.A);
             Assert.That(counter, Is.EqualTo(1), "Sequence1 failed");
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Alt));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Control));
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Alt);
+            hc.OnKeyUp(null, Keys.Control);
             Assert.That(counter, Is.EqualTo(1), "Sequence1 failed");
 
             //With Control and Alt Keys.A is a hotkey. Sequence2 of pressing and releasing ctrl and alt
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Alt));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.Alt);
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
             Assert.That(counter, Is.EqualTo(2), "Sequence2 failed");
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Alt));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Control));
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Alt);
+            hc.OnKeyUp(null, Keys.Control);
             Assert.That(counter, Is.EqualTo(2), "Sequence2 failed");
 
             //With Control and Alt Keys.A is a hotkey. Sequence3 of pressing and releasing ctrl and alt
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Alt));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.Alt);
+            hc.OnKeyDown(null, Keys.A);
             Assert.That(counter, Is.EqualTo(3), "Sequence3 failed");
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Control));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Alt));
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Control);
+            hc.OnKeyUp(null, Keys.Alt);
             Assert.That(counter, Is.EqualTo(3), "Sequence3 failed");
 
             //With Control and Alt Keys.A is a hotkey. Sequence4 of pressing and releasing ctrl and alt
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Alt));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(sender: null, e: new KeyEventArgs(Keys.A));
+            hc.OnKeyDown(null, Keys.Alt);
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
             Assert.That(counter, Is.EqualTo(4), "Sequence4 failed");
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Control));
-            hc.OnKeyUp(sender: null, e: new KeyEventArgs(Keys.Alt));
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Control);
+            hc.OnKeyUp(null, Keys.Alt);
             Assert.That(counter, Is.EqualTo(4), "Sequence4 failed");
         }
 
@@ -874,10 +1379,10 @@ namespace Dfust.Hotkeys.Tests {
 
             //--- Act
 
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.G));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.G));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.G);
+            hc.OnKeyUp(null, Keys.G);
+            hc.OnKeyUp(null, Keys.Control);
 
             //---Assert
 
@@ -974,14 +1479,14 @@ namespace Dfust.Hotkeys.Tests {
             //Type lorem ipsum. Since none of it is the start of a hotkey,
             foreach (var c in loremIpsum) {
                 //press key
-                hc.OnKeyDown(null, new KeyEventArgs(Char2Keys(c)));
+                hc.OnKeyDown(null, Char2Keys(c));
                 currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
 
                 //if key was 'a', this is the start of a Chord (namely "A, ctrl+x"). Since we never press control here, this chord is never finished and triggered
                 var expected = (char.ToLower(c) == 'a' ? 1 : 0);
                 Assert.That(currentlyRecognized.Count(), Is.EqualTo(expected));
 
-                hc.OnKeyUp(null, new KeyEventArgs(Char2Keys(c)));
+                hc.OnKeyUp(null, Char2Keys(c));
                 currentlyRecognized = hc.GetCurrentlyRecognizedPartialChord();
                 Assert.That(currentlyRecognized.Count(), Is.EqualTo(expected), $"char '{c}'");
 
@@ -1362,16 +1867,16 @@ namespace Dfust.Hotkeys.Tests {
 
             //----- First: Modifiers stay on throughout the chord
             //--- Act
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
 
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.C));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.C));
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyDown(null, Keys.B);
+            hc.OnKeyUp(null, Keys.B);
+            hc.OnKeyDown(null, Keys.C);
+            hc.OnKeyUp(null, Keys.C);
 
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyUp(null, Keys.Control);
 
             //---Assert
             Assert.That(counter, Is.EqualTo(1));
@@ -1379,20 +1884,20 @@ namespace Dfust.Hotkeys.Tests {
             //----------------------------------------------------
             //----- Second: Modifiers around every key press
             //--- Act
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Control);
 
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.B);
+            hc.OnKeyUp(null, Keys.B);
+            hc.OnKeyUp(null, Keys.Control);
 
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.C));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.C));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.C);
+            hc.OnKeyUp(null, Keys.C);
+            hc.OnKeyUp(null, Keys.Control);
 
             //---Assert
             Assert.That(counter, Is.EqualTo(2));
@@ -1400,17 +1905,17 @@ namespace Dfust.Hotkeys.Tests {
             //----------------------------------------------------
             //----- Third: Modifiers around the first two and around the last key
             //--- Act
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyDown(null, Keys.B);
+            hc.OnKeyUp(null, Keys.B);
+            hc.OnKeyUp(null, Keys.Control);
 
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.C));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.C));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.C);
+            hc.OnKeyUp(null, Keys.C);
+            hc.OnKeyUp(null, Keys.Control);
 
             //---Assert
             Assert.That(counter, Is.EqualTo(3));
@@ -1418,17 +1923,17 @@ namespace Dfust.Hotkeys.Tests {
             //----------------------------------------------------
             //----- Fourth: Modifiers around the last two and around the first key
             //--- Act
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.A));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.A);
+            hc.OnKeyUp(null, Keys.A);
+            hc.OnKeyUp(null, Keys.Control);
 
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.B));
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.C));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.C));
-            hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
+            hc.OnKeyDown(null, Keys.B);
+            hc.OnKeyUp(null, Keys.B);
+            hc.OnKeyDown(null, Keys.C);
+            hc.OnKeyUp(null, Keys.C);
+            hc.OnKeyUp(null, Keys.Control);
 
             //---Assert
             Assert.That(counter, Is.EqualTo(4));
@@ -1446,15 +1951,15 @@ namespace Dfust.Hotkeys.Tests {
             //--- Act
 
             //press Control
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
+            hc.OnKeyDown(null, Keys.Control);
             Assert.That(counter, Is.EqualTo(0));
 
             //Press C => ctrl+C should trigger
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.C));
+            hc.OnKeyDown(null, Keys.C);
             Assert.That(counter, Is.EqualTo(1));
 
             //Press V => ctrl+V should trigger
-            hc.OnKeyDown(null, new KeyEventArgs(Keys.V));
+            hc.OnKeyDown(null, Keys.V);
             Assert.That(counter, Is.EqualTo(2));
         }
 
@@ -1487,18 +1992,18 @@ namespace Dfust.Hotkeys.Tests {
             //--- Act
             //Type lorem ipsum
             foreach (var c in lorem) {
-                hc.OnKeyDown(null, new KeyEventArgs(Char2Keys(c)));
-                hc.OnKeyUp(null, new KeyEventArgs(Char2Keys(c)));
+                hc.OnKeyDown(null, Char2Keys(c));
+                hc.OnKeyUp(null, Char2Keys(c));
             }
 
             foreach (var mods in hotkeyCombinations) {
                 foreach (var mod in mods) {
-                    hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
+                    hc.OnKeyDown(null, Keys.Control);
                     foreach (var key in mod) {
-                        hc.OnKeyDown(null, new KeyEventArgs(key));
-                        hc.OnKeyUp(null, new KeyEventArgs(key));
+                        hc.OnKeyDown(null, key);
+                        hc.OnKeyUp(null, key);
                     }
-                    hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+                    hc.OnKeyUp(null, Keys.Control);
                 }
             }
 
@@ -1511,17 +2016,17 @@ namespace Dfust.Hotkeys.Tests {
             foreach (var hotkey in hotkeys) {
                 //Type lorem ipsum
                 foreach (var c in lorem) {
-                    hc.OnKeyDown(null, new KeyEventArgs(Char2Keys(c)));
-                    hc.OnKeyUp(null, new KeyEventArgs(Char2Keys(c)));
+                    hc.OnKeyDown(null, Char2Keys(c));
+                    hc.OnKeyUp(null, Char2Keys(c));
                 }
 
                 //use hotkey once more
-                hc.OnKeyDown(null, new KeyEventArgs(Keys.Control));
+                hc.OnKeyDown(null, Keys.Control);
                 foreach (var key in hotkey) {
-                    hc.OnKeyDown(null, new KeyEventArgs(key));
-                    hc.OnKeyUp(null, new KeyEventArgs(key));
+                    hc.OnKeyDown(null, key);
+                    hc.OnKeyUp(null, key);
                 }
-                hc.OnKeyUp(null, new KeyEventArgs(Keys.Control));
+                hc.OnKeyUp(null, Keys.Control);
             }
 
             //---Assert

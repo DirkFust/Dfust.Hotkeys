@@ -29,16 +29,39 @@ namespace Dfust.Hotkeys {
 
     public class HotKeyEventArgs {
 
-        public HotKeyEventArgs(object sender, IList<Keys> keys, int count, bool continuously = false, bool followUp = false) {
+        public HotKeyEventArgs(object sender,
+                               IList<Keys> keys,
+                               int count,
+                               int countConsecutive,
+                               int? countLastModifierEnvelope,
+                               string description,
+                               bool continuously = false,
+                               bool followUp = false) {
             Sender = sender;
             Keys = keys;
             Count = count;
             //we can only be continuously if we are a follow up
             Continuously = continuously && followUp;
             FollowUp = followUp;
+            Description = description;
+            DirectlyConsecutiveCount = countConsecutive;
+            LastModifierEnvelopeCount = countLastModifierEnvelope;
         }
 
-        public HotKeyEventArgs(object sender, Keys key, int count, bool continuously = false) : this(sender, new List<Keys>(new[] { key }), count, continuously) {
+        public HotKeyEventArgs(object sender,
+                               Keys key,
+                               int count,
+                               int countConsecutive,
+                               int? countLastModifierEnvelope,
+                               string description,
+                               bool continuously = false)
+            : this(sender,
+                   new List<Keys>(new[] { key }),
+                   count,
+                   countConsecutive,
+                   countLastModifierEnvelope,
+                   description,
+                   continuously) {
         }
 
         /// <summary>
@@ -57,11 +80,26 @@ namespace Dfust.Hotkeys {
         public bool Continuously { get; }
 
         /// <summary>
-        /// Returns how often this hotkey was consecutively pressed. The first triggering is 1, every
-        /// consecutive triggering increments by one.
+        /// Returns how often this hotkey was triggered without any other hotkey in between. The
+        /// first triggering is 1, every consecutive triggering increments by one. This count
+        /// increases, if other (non hotkey) keys were pressed between the triggerings.
         /// </summary>
         /// <value>The count.</value>
         public int Count { get; }
+
+        /// <summary>
+        /// Return the description of the hotkey.
+        /// </summary>
+        /// <value>The description.</value>
+        public string Description { get; }
+
+        /// <summary>
+        /// Returns how often this hotkey was triggered without any other hotkey or non-hotkey in
+        /// between. The first triggering is 1, every consecutive triggering increments by one. This
+        /// count does increase, if other (non hotkey) keys were pressed between the triggerings.
+        /// </summary>
+        /// <value>The count.</value>
+        public int DirectlyConsecutiveCount { get; }
 
         /// <summary>
         /// Returns whether this hotkey/chord was a follow up to the hotkey before it.
@@ -77,6 +115,16 @@ namespace Dfust.Hotkeys {
         /// </summary>
         /// <value>The keys.</value>
         public IList<Keys> Keys { get; }
+
+        /// <summary>
+        /// Returns how often this hotkey was triggered in a "modifier envelope", that means between
+        /// the first press and the last release of hotkey's the modifiers. This value is null when
+        /// at least one modifier key is still pressed. This changes with the
+        /// <c>AllModifiersReleasedAfterHotkey</c> event after the hotkey was pressed, so this
+        /// Property is only interesting for the <c>AllModifiersReleasedAfterHotkey</c>.
+        /// </summary>
+        /// <value>The count.</value>
+        public int? LastModifierEnvelopeCount { get; }
 
         /// <summary>
         /// Returns the sender of the KeyEventArgs that triggered the hotkey.

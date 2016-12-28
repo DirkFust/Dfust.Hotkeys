@@ -56,42 +56,22 @@ namespace StrgV2 {
 
         private void GlobalHookFiltered_KeyDown(object sender, KeyEventArgs e) {
             var keyData = e.KeyData;
-            //if (keyData == (Keys.V | keyData)) {
-            //    if (e.Control) {
-            //        e.Handled = true;
-            //    }
             txtLogFiltered.AppendText(Environment.NewLine + "" + $@"↓ {keyData}");
-            //}
         }
 
         private void GlobalHookFiltered_KeyUp(object sender, KeyEventArgs e) {
             var keyData = e.KeyData;
-            //if (keyData == (Keys.V | keyData)) {
-            //    if (e.Control) {
-            //        e.Handled = true;
-            //    }
             txtLogFiltered.AppendText(Environment.NewLine + "" + $@"↑ {keyData}");
-            //}
         }
 
         private void GlobalHookUnfiltered_KeyDown(object sender, KeyEventArgs e) {
             var keyData = e.KeyData;
-            //if (keyData == (Keys.V | keyData)) {
-            //    if (e.Control) {
-            //        e.Handled = true;
-            //    }
             txtLogUnfiltered.AppendText(Environment.NewLine + "" + $@"↓ {keyData}");
-            //}
         }
 
         private void GlobalHookUnfiltered_KeyUp(object sender, KeyEventArgs e) {
             var keyData = e.KeyData;
-            //if (keyData == (Keys.V | keyData)) {
-            //    if (e.Control) {
-            //        e.Handled = true;
-            //    }
             txtLogUnfiltered.AppendText(Environment.NewLine + "" + $@"↑ {keyData}");
-            //}
         }
 
         private void Subscribe() {

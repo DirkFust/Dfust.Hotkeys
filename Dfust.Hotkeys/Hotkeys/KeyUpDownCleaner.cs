@@ -82,7 +82,7 @@ namespace Dfust.Hotkeys {
         /// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
         public void OnKeyUp(object sender, KeyEventArgs e) {
             var rawKey = GetRawKey(e);
-            if (rawKey != null) {
+            if (rawKey != null && m_keysDown.ContainsKey(rawKey.ReplacementKey)) {
                 var count = m_keysDown[rawKey.ReplacementKey].Count();
                 if (count == 1) {
                     m_keysDown.Remove(rawKey.ReplacementKey);
